@@ -134,7 +134,8 @@ function renderChat() {
     img.addEventListener("error",()=>img.remove()); avatar.replaceChildren(img);
     const content = element("div","msg-content");
     content.append(element("div","msg-sender-name", tx.payer + " 付款"));
-    const isPending = tx.isPending === true || tx.amount === null || tx.amount === undefined || tx.amount === "";\n    const bubble = element("div","bubble" + (isPending ? " pending" : ""));
+    const isPending = tx.isPending === true || tx.amount === null || tx.amount === undefined || tx.amount === "";
+    const bubble = element("div","bubble" + (isPending ? " pending" : ""));
     const top = element("div","bubble-top");
     top.append(element("span","bubble-item",tx.item || "未命名項目"));
     top.append(element("span","bubble-amount"+(isPending?" pending-txt":""),isPending?"⏳ 待補":money(tx.amount)));
@@ -198,15 +199,16 @@ window.sendQuickTx = async (event) => {
 window.openEditModal = (id) => {
   const tx=transactions[id]; if(!tx || tx.isDeleted) return;
   $("editTxId").value=id;$("editModalTitle").textContent=tx.isPending?"💰 補上消費金額":"✏️ 修改這筆消費";
-  $("editItem").value=tx.item||"";$("editAmount").value=tx.isPending?"":tx.amount;$("editPending").checked=!!tx.isPending;
-  $("editAmount").disabled=!!tx.isPending;$("editDate").value=tx.date||taiwanDateString();
+  const pending = tx.isPending === true || tx.amount === null || tx.amount === undefined || tx.amount === "";
+  $("editItem").value=tx.item||"";$("editAmount").value=pending?"":tx.amount;$("editPending").checked=pending;
+  $("editAmount").disabled=pending;$("editDate").value=tx.date||taiwanDateString();
 window.selectRadio("editPayerGroup",tx.payer);window.selectRadio("editSplitGroup",tx.splitType||"split");
   $("editModal").classList.add("open");
 };
 window.toggleEditPending=()=>{const p=$("editPending").checked;$("editAmount").disabled=p;if(p)$("editAmount").value="";};
 window.saveEditedTx=async(event)=>{
   event.preventDefault();const id=$("editTxId").value,old=transactions[id];if(!old||old.isDeleted)return;
-  const pending=$("editPending").checked,amount=pending?0:Number($("editAmount").value);
+  const amountValue=$("editAmount").value.trim();const pending=$("editPending").checked||amountValue==="";const amount=pending?0:Number(amountValue);
   const after={item:$("editItem").value.trim(),amount,isPending:pending,payer:getRadioVal("editPayerGroup"),splitType:getRadioVal("editSplitGroup"),date:$("editDate").value};
   if(!after.item||(!pending&&(!Number.isSafeInteger(amount)||amount<=0))||!after.date||!["Benson","佩筠"].includes(after.payer)||!["split","advance"].includes(after.splitType))return alert("請確認項目、日期、付款人及正整數金額。");
   try{await update(ref(db,"transactions/"+id),{...after,updatedAt:Date.now(),updatedByUid:currentUser.uid,updatedBy:currentMember});await audit("update","修改："+old.item+" → "+after.item,old,after);window.closeModals();}
