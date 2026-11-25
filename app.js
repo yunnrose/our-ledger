@@ -251,10 +251,13 @@ function renderCalendarDayModal(date){
  if(!records.length){list.append(element("p","calendar-no-records","這一天還沒有帳務紀錄。"));return;}
  records.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
  records.forEach(tx=>{
-   const row=element("div","calendar-record-row");
    const isRepayment=tx.type==="settlement",pending=!isRepayment&&(tx.isPending===true||tx.amount===null||tx.amount===undefined||tx.amount==="");
+   const row=element("button","calendar-record-row calendar-record-button"+(pending?" calendar-record-pending":""));
+   row.type="button";
    const title=isRepayment?(tx.payer+" 還款給 "+(tx.receiver||(tx.payer==="Benson"?"佩筠":"Benson"))):(tx.item||"未命名項目");
-   row.append(element("span","calendar-record-name",title),element("strong","calendar-record-value"+(pending?" pending-txt":""),pending?"待補":money(tx.amount)));
+   row.append(element("span","calendar-record-name",title),element("strong","calendar-record-value"+(pending?" pending-txt":""),pending?"待補 · 補金額":money(tx.amount)));
+   row.title=pending?"點擊補上金額":isRepayment?"點擊修改還款紀錄":"點擊修改支出紀錄";
+   row.addEventListener("click",()=>isRepayment?window.openEditSettlementModal(tx.id):window.openEditModal(tx.id));
    list.append(row);
  });
 }
@@ -356,16 +359,49 @@ window.saveEditedTx=async(event)=>{
   catch(e){alert("修改失敗，請確認資料庫權限。");}
 };
 window.openSettleModal=()=>{
+  $("settleTxId").value="";
   const s=describeSettlement(netBalance);if(!s.amount)return alert("目前沒有待結清款項。");
-  $("settleAmount").value=s.amount;window.selectRadio("settleDirGroup",s.debtor+"->"+s.creditor);$("settleDate").value=taiwanDateString();$("settleModal").classList.add("open");
+  $("settleAmount").value=s.amount;window.selectRadio("settleDirGroup",s.debtor+"->"+s.creditor);$("settleDate").value=taiwanDateString();
+  $("settleModal").querySelector(".modal-title").textContent="💸 記錄一筆還款";
+  $("settleModal").querySelector(".btn-submit").textContent="送出還款訊息";
+  $("settleModal").classList.add("open");
+};
+window.openEditSettlementModal=(id)=>{
+  const tx=transactions[id];if(!tx||tx.isDeleted||tx.type!=="settlement")return;
+  const receiver=tx.receiver||(tx.payer==="Benson"?"佩筠":"Benson");
+  $("settleTxId").value=id;
+  window.selectRadio("settleDirGroup",tx.payer+"->"+receiver);
+  $("settleAmount").value=tx.amount;
+  $("settleDate").value=tx.date||taiwanDateString();
+  $("settleModal").querySelector(".modal-title").textContent="✏️ 修改還款紀錄";
+  $("settleModal").querySelector(".btn-submit").textContent="儲存還款修改";
+  $("settleModal").classList.add("open");
 };
 window.saveSettlement=async(event)=>{
-  event.preventDefault();const [payer,receiver]=getRadioVal("settleDirGroup").split("->"),amount=Number($("settleAmount").value);
-  const err=validateSettlement({payer,receiver,amount},netBalance);if(err)return alert(err);
+  event.preventDefault();
+  const id=$("settleTxId").value;
+  const [payer,receiver]=getRadioVal("settleDirGroup").split("->"),amount=Number($("settleAmount").value);
   const date=$("settleDate").value||taiwanDateString();
-  const tx={type:"settlement",payer,receiver,amount,date,isPending:false,createdAt:Date.now(),createdByUid:currentUser.uid,createdBy:currentMember};
-  try{await push(txRef,tx);await audit("settlement","還款："+payer+" 還給 "+receiver+" "+money(amount),null,tx);window.closeModals();if(selectedCalendarDate){renderCalendarDayModal(selectedCalendarDate);openCalendarDayModal(selectedCalendarDate);}}
-  catch(e){alert("還款紀錄新增失敗。");}
+  if(!["Benson","佩筠"].includes(payer)||!["Benson","佩筠"].includes(receiver)||payer===receiver||!Number.isSafeInteger(amount)||amount<=0||!date)
+    return alert("請確認還款人、收款人、日期及正整數金額。");
+  const tx={type:"settlement",payer,receiver,amount,date,isPending:false};
+  try{
+    if(id){
+      const old=transactions[id];if(!old||old.isDeleted)return;
+      const after={...tx,updatedAt:Date.now(),updatedByUid:currentUser.uid,updatedBy:currentMember};
+      await update(ref(db,"transactions/"+id),after);
+      await audit("update","修改還款："+payer+" 還給 "+receiver+" "+money(amount),old,after);
+    }else{
+      const err=validateSettlement({payer,receiver,amount},netBalance);if(err)return alert(err);
+      const created={...tx,createdAt:Date.now(),createdByUid:currentUser.uid,createdBy:currentMember};
+      await push(txRef,created);await audit("settlement","還款："+payer+" 還給 "+receiver+" "+money(amount),null,created);
+    }
+    window.closeModals();
+    $("settleTxId").value="";
+    $("settleModal").querySelector(".modal-title").textContent="💸 記錄一筆還款";
+    $("settleModal").querySelector(".btn-submit").textContent="送出還款訊息";
+    if(selectedCalendarDate){renderCalendarDayModal(selectedCalendarDate);$("calendarDayModal").hidden=false;}
+  }catch(e){alert(id?"修改還款紀錄失敗。":"還款紀錄新增失敗。");}
 };
 window.deleteTx=async(id)=>{
   const tx=transactions[id];if(!tx||tx.isDeleted||!confirm("確定撤銷這筆紀錄？資料會保留在操作歷史中。"))return;
