@@ -18,6 +18,7 @@ let activeLedgerTab = "all";
 let netBalance = 0;
 let searchTerm = "";
 let selectedDate = "";
+let selectedCalendarDate = "";
 let calendarDate = new Date();
 let calcExpression = "";
 let stopTransactions = null;
@@ -39,6 +40,7 @@ function startSharedRoom() {
     renderSummary();
     renderChat();
     if (!$("calendarPanel").hidden) renderCalendar();
+    if ($("calendarDayModal")?.classList.contains("open")) renderCalendarDayModal(selectedCalendarDate);
   }, () => $("syncStatus").textContent = "資料讀取失敗");
   stopLogs = onValue(logsRef, (snapshot) => {
     logs = Object.values(snapshot.val() || {}).sort((a,b) => (b.timestamp||0)-(a.timestamp||0));
@@ -210,9 +212,86 @@ function renderCalendar(){
  const grid=$("calendarGrid");grid.replaceChildren();
  ["日","一","二","三","四","五","六"].forEach(d=>grid.append(element("span","calendar-weekday",d)));
  const offset=first.getDay();for(let i=0;i<offset;i++)grid.append(element("span","calendar-empty",""));
- const dates=new Set(Object.values(transactions).filter(t=>t&&!t.isDeleted).map(t=>t.date));
- for(let day=1;day<=days;day++){const key=`${y}-${String(m+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;const b=element("button","calendar-day"+(selectedDate===key?" selected":""),String(day));b.type="button";if(dates.has(key))b.classList.add("has-record");b.addEventListener("click",()=>{selectedDate=selectedDate===key?"":key;renderCalendar();renderChat();});grid.append(b);}
+ const byDate={};
+ Object.values(transactions).forEach(tx=>{
+   if(!tx||tx.isDeleted===true||!tx.date)return;
+   const entry=byDate[tx.date]||(byDate[tx.date]={expense:false,repayment:false,pending:false});
+   if(tx.type==="settlement")entry.repayment=true;
+   else if(tx.isPending===true||tx.amount===null||tx.amount===undefined||tx.amount==="")entry.pending=true;
+   else entry.expense=true;
+ });
+ for(let day=1;day<=days;day++){
+   const key=`${y}-${String(m+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+   const b=element("button","calendar-day"+(selectedDate===key?" selected":""),String(day));b.type="button";
+   const marks=byDate[key];
+   if(marks){
+     const dots=element("span","calendar-dots");
+     if(marks.expense)dots.append(element("i","calendar-dot expense-dot"));
+     if(marks.repayment)dots.append(element("i","calendar-dot repayment-dot"));
+     if(marks.pending)dots.append(element("i","calendar-dot pending-dot"));
+     b.append(dots);
+   }
+   b.addEventListener("click",()=>{selectedDate=key;selectedCalendarDate=key;renderCalendar();renderChat();openCalendarDayModal(key);});
+   grid.append(b);
+ }
 }
+function renderCalendarDayModal(date){
+ if(!date)return;
+ const records=Object.entries(transactions).filter(([,tx])=>tx&&!tx.isDeleted&&tx.date===date).map(([id,tx])=>({id,...tx}));
+ const expenseTotal=records.filter(tx=>tx.type!=="settlement"&&tx.isPending!==true&&tx.amount!==null&&tx.amount!==undefined&&tx.amount!=="").reduce((sum,tx)=>sum+Number(tx.amount||0),0);
+ const repaymentTotal=records.filter(tx=>tx.type==="settlement").reduce((sum,tx)=>sum+Number(tx.amount||0),0);
+ const pendingCount=records.filter(tx=>tx.type!=="settlement"&&(tx.isPending===true||tx.amount===null||tx.amount===undefined||tx.amount==="")).length;
+ const d=new Date(date+"T00:00:00+08:00");
+ $("calendarDayTitle").textContent=new Intl.DateTimeFormat("zh-TW",{timeZone:"Asia/Taipei",year:"numeric",month:"long",day:"numeric",weekday:"short"}).format(d);
+ const summary=$("calendarDaySummary");summary.replaceChildren();
+ [["支出總額",money(expenseTotal),"expense-summary"],["還款總額",money(repaymentTotal),"repayment-summary"],["待補筆數",pendingCount+" 筆","pending-summary"]].forEach(([label,value,cls])=>{
+   const item=element("div","calendar-summary-item "+cls);item.append(element("span","",label),element("strong","",value));summary.append(item);
+ });
+ const list=$("calendarDayRecords");list.replaceChildren();
+ if(!records.length){list.append(element("p","calendar-no-records","這一天還沒有帳務紀錄。"));return;}
+ records.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+ records.forEach(tx=>{
+   const row=element("div","calendar-record-row");
+   const isRepayment=tx.type==="settlement",pending=!isRepayment&&(tx.isPending===true||tx.amount===null||tx.amount===undefined||tx.amount==="");
+   const title=isRepayment?(tx.payer+" 還款給 "+(tx.receiver||(tx.payer==="Benson"?"佩筠":"Benson"))):(tx.item||"未命名項目");
+   row.append(element("span","calendar-record-name",title),element("strong","calendar-record-value"+(pending?" pending-txt":""),pending?"待補":money(tx.amount)));
+   list.append(row);
+ });
+}
+window.openCalendarDayModal=(date)=>{selectedCalendarDate=date||selectedCalendarDate;renderCalendarDayModal(selectedCalendarDate);$("calendarDayModal").classList.add("open");};
+window.openCalendarExpenseModal=()=>{
+ if(!selectedCalendarDate)return;
+ $("calendarDayModal").classList.remove("open");
+ $("calendarExpenseDate").value=selectedCalendarDate;
+ $("calendarExpenseInput").value="";
+ $("calendarExpenseModal").classList.add("open");
+ $("calendarExpenseInput").focus();
+};
+window.saveCalendarExpense=async(event)=>{
+ event.preventDefault();
+ if(!currentUser||!currentMember)return;
+ const raw=$("calendarExpenseInput").value.trim(),date=$("calendarExpenseDate").value;
+ if(!raw||!date)return alert("請輸入記帳內容及日期。");
+ const parsed=parseNaturalLanguage(raw,currentMember,new Date());
+ if(!parsed.ok)return alert(parsed.error||"無法辨識記帳內容。");
+ if(parsed.transaction.type==="settlement")return alert("這裡是新增支出入口，還款請使用「新增還款」。");
+ const now=new Date();
+ const tx={...parsed.transaction,date,splitType:parsed.transaction.splitType||"split",
+   shortTime:new Intl.DateTimeFormat("zh-TW",{timeZone:"Asia/Taipei",hour:"2-digit",minute:"2-digit",hour12:false}).format(now),
+   createdAt:Date.now(),createdByUid:currentUser.uid,createdBy:currentMember};
+ try{
+   await push(txRef,tx);
+   await audit("create","月曆新增支出："+tx.item+(tx.isPending?"（待補）":" "+money(tx.amount))+"（"+tx.payer+" 付款）",null,tx);
+   $("calendarExpenseModal").classList.remove("open");
+   selectedCalendarDate=date;selectedDate=date;renderCalendar();renderChat();openCalendarDayModal(date);
+ }catch(error){alert("新增支出失敗，請確認網路連線及 Firebase 權限。");}
+};
+window.openCalendarRepaymentModal=()=>{
+ if(!selectedCalendarDate)return;
+ $("calendarDayModal").classList.remove("open");
+ window.openSettleModal();
+ if($("settleModal").classList.contains("open"))$("settleDate").value=selectedCalendarDate;
+};
 window.openCalculator=()=>{$("calculatorModal").classList.add("open");};
 window.calcPress=(key)=>{if(key==="C")calcExpression="";else if(key==="="){try{const safe=calcExpression.replace(/×/g,"*").replace(/÷/g,"/").replace(/−/g,"-");if(!/^[0-9+*/.() -]+$/.test(safe))throw Error();calcExpression=String(Function('"use strict";return ('+safe+')')());}catch{calcExpression="錯誤";}}else calcExpression+=key;$("calcDisplay").value=calcExpression||"0";};
 
@@ -262,13 +341,14 @@ window.saveEditedTx=async(event)=>{
 };
 window.openSettleModal=()=>{
   const s=describeSettlement(netBalance);if(!s.amount)return alert("目前沒有待結清款項。");
-  $("settleAmount").value=s.amount;window.selectRadio("settleDirGroup",s.debtor+"->"+s.creditor);$("settleModal").classList.add("open");
+  $("settleAmount").value=s.amount;window.selectRadio("settleDirGroup",s.debtor+"->"+s.creditor);$("settleDate").value=selectedCalendarDate||taiwanDateString();$("settleModal").classList.add("open");
 };
 window.saveSettlement=async(event)=>{
   event.preventDefault();const [payer,receiver]=getRadioVal("settleDirGroup").split("->"),amount=Number($("settleAmount").value);
   const err=validateSettlement({payer,receiver,amount},netBalance);if(err)return alert(err);
-  const tx={type:"settlement",payer,receiver,amount,date:taiwanDateString(),isPending:false,createdAt:Date.now(),createdByUid:currentUser.uid,createdBy:currentMember};
-  try{await push(txRef,tx);await audit("settlement","還款："+payer+" 還給 "+receiver+" "+money(amount),null,tx);window.closeModals();}
+  const date=$("settleDate").value||taiwanDateString();
+  const tx={type:"settlement",payer,receiver,amount,date,isPending:false,createdAt:Date.now(),createdByUid:currentUser.uid,createdBy:currentMember};
+  try{await push(txRef,tx);await audit("settlement","還款："+payer+" 還給 "+receiver+" "+money(amount),null,tx);window.closeModals();if(selectedCalendarDate){renderCalendarDayModal(selectedCalendarDate);openCalendarDayModal(selectedCalendarDate);}}
   catch(e){alert("還款紀錄新增失敗。");}
 };
 window.deleteTx=async(id)=>{
