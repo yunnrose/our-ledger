@@ -158,6 +158,7 @@
             <button class="close-btn" onclick="closeModals()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <form onsubmit="saveSettlement(event)">
+            <input type="hidden" id="settleTxId">
             <div class="form-group">
                 <label class="form-label">誰還錢給誰？</label>
                 <div class="radio-group" id="settleDirGroup">
