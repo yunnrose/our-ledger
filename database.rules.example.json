@@ -9,12 +9,12 @@
       }
     },
     "transactions": {
-      ".read": "auth != null && (auth.uid === 'REPLACE_PEIJUN_UID' || auth.uid === 'REPLACE_BENSON_UID')",
-      ".write": "auth != null && (auth.uid === 'REPLACE_PEIJUN_UID' || auth.uid === 'REPLACE_BENSON_UID')"
+      ".read": "auth != null && root.child('members').child(auth.uid).child('active').val() === true",
+      ".write": "auth != null && root.child('members').child(auth.uid).child('active').val() === true"
     },
     "logs": {
-      ".read": "auth != null && (auth.uid === 'REPLACE_PEIJUN_UID' || auth.uid === 'REPLACE_BENSON_UID')",
-      ".write": "auth != null && (auth.uid === 'REPLACE_PEIJUN_UID' || auth.uid === 'REPLACE_BENSON_UID')"
+      ".read": "auth != null && root.child('members').child(auth.uid).child('active').val() === true",
+      ".write": "auth != null && root.child('members').child(auth.uid).child('active').val() === true"
     }
   }
 }
