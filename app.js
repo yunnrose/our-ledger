@@ -71,6 +71,7 @@ onAuthStateChanged(auth, async (user) => {
   }
   $("identityScreen").hidden = false;
   $("chatApp").hidden = true;
+  $("identityError").textContent = "";
 });
 
 function audit(action, message, before = null, after = null) {
