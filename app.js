@@ -13,9 +13,6 @@ let currentUser = null;
 let currentMember = null;
 let transactions = {};
 let logs = [];
-let quickPayer = "Benson";
-let quickSplit = "split";
-let quickPending = false;
 let filterPendingOnly = false;
 let netBalance = 0;
 let stopTransactions = null;
@@ -30,9 +27,7 @@ function startSharedRoom() {
   $("identityScreen").hidden = true;
   $("chatApp").hidden = false;
   $("currentIdentity").textContent = "操作身分：" + currentMember;
-  quickPayer = currentMember;
-  updatePayerChips();
-  if (stopTransactions) stopTransactions();
+    if (stopTransactions) stopTransactions();
   if (stopLogs) stopLogs();
   stopTransactions = onValue(txRef, (snapshot) => {
     transactions = snapshot.val() || {};
@@ -131,7 +126,7 @@ function renderChat() {
     img.src = isBenson ? "benson.png" : "peiyun.jpg"; img.alt = tx.payer;
     img.addEventListener("error",()=>img.remove()); avatar.replaceChildren(img);
     const content = element("div","msg-content");
-    content.append(element("div","msg-sender-name", tx.payer + " 付款 · " + (tx.category || "一般")));
+    content.append(element("div","msg-sender-name", tx.payer + " 付款"));
     const bubble = element("div","bubble" + (tx.isPending ? " pending" : ""));
     const top = element("div","bubble-top");
     top.append(element("span","bubble-item",tx.item || "未命名項目"));
@@ -149,65 +144,45 @@ function renderChat() {
   }
   stream.scrollTop = stream.scrollHeight;
 }
-function updatePayerChips() {
-  document.querySelectorAll(".chip[data-payer]").forEach(btn => btn.classList.toggle("active",btn.dataset.payer===quickPayer));
-}
-window.setQuickPayer = (payer) => { if (["Benson","佩筠"].includes(payer)) {quickPayer=payer;updatePayerChips();} };
-window.setQuickSplit = (split) => {
-  quickSplit = split;
-  document.querySelectorAll(".chip[data-split]").forEach(btn=>btn.classList.toggle("active",btn.dataset.split===split));
-};
-window.toggleQuickPending = () => {
-  quickPending=!quickPending; $("quickPendingChip").classList.toggle("active",quickPending);
-  $("quickAmount").disabled=quickPending; $("quickAmount").placeholder=quickPending?"待補":"$ 金額";
-  if(quickPending) $("quickAmount").value="";
-};
 window.togglePendingFilter = () => {
   filterPendingOnly=!filterPendingOnly; $("pendingFilterBtn").classList.toggle("active",filterPendingOnly); renderChat();
 };
 window.sendQuickTx = async (event) => {
-  event.preventDefault(); if(!currentUser || !currentMember) return;
-  const raw=$("quickItem").value.trim();
-  if(!raw) return alert("請輸入記帳內容");
-  const now=new Date();
-  const parsed=parseNaturalLanguage(raw,currentMember,now);
-  const hasNaturalAmount=/\d/.test(raw);
-  const hasNaturalPending=/待補|金額未定|還沒確認金額/.test(raw);
-  let tx;
-  if(parsed.ok && (hasNaturalAmount || hasNaturalPending)) {
-    tx={...parsed.transaction,category:$("quickCategory").value,
-      shortTime:new Intl.DateTimeFormat("zh-TW",{timeZone:"Asia/Taipei",hour:"2-digit",minute:"2-digit",hour12:false}).format(now),
-      createdAt:Date.now(),createdByUid:currentUser.uid,createdBy:currentMember};
-  } else {
-    const amt=quickPending?0:Number($("quickAmount").value);
-    if(!quickPending && (!Number.isSafeInteger(amt)||amt<=0)) {
-      return alert(parsed.error || "請輸入正整數金額，或使用自然語句，例如：晚餐 850 Benson 付");
-    }
-    tx={type:"expense",item:raw,amount:amt,isPending:quickPending,payer:quickPayer,
-      splitType:quickSplit,date:taiwanDateString(now),category:$("quickCategory").value,
-      shortTime:new Intl.DateTimeFormat("zh-TW",{timeZone:"Asia/Taipei",hour:"2-digit",minute:"2-digit",hour12:false}).format(now),
-      createdAt:Date.now(),createdByUid:currentUser.uid,createdBy:currentMember};
-  }
+  event.preventDefault();
+  if (!currentUser || !currentMember) return;
+  const raw = $("quickItem").value.trim();
+  if (!raw) return;
+  const now = new Date();
+  const parsed = parseNaturalLanguage(raw, currentMember, now);
+  if (!parsed.ok) return alert(parsed.error || "無法辨識記帳內容，請確認項目、金額及付款人。");
+  const tx = {
+    ...parsed.transaction,
+    splitType: parsed.transaction.splitType || "split",
+    shortTime: new Intl.DateTimeFormat("zh-TW", {timeZone:"Asia/Taipei",hour:"2-digit",minute:"2-digit",hour12:false}).format(now),
+    createdAt: Date.now(), createdByUid: currentUser.uid, createdBy: currentMember
+  };
   try {
-    await push(txRef,tx);
-    await audit("create","新增："+tx.item+(tx.isPending?"（待補）":" "+money(tx.amount))+"（"+tx.payer+" 付款）",null,tx);
-    $("quickItem").value="";$("quickAmount").value="";
-    if(quickPending && $("quickPendingChip").classList.contains("active")) window.toggleQuickPending();
-  } catch(e) { alert("新增失敗，請確認登入狀態與資料庫權限。"); }
+    await push(txRef, tx);
+    await audit("create", "新增：" + tx.item + (tx.isPending ? "（待補）" : " " + money(tx.amount)) + "（" + tx.payer + " 付款）", null, tx);
+    $("quickItem").value = "";
+    $("quickItem").focus();
+  } catch (e) {
+    alert("新增失敗，請確認網路連線及 Firebase 資料庫權限。");
+  }
 };
 window.openEditModal = (id) => {
   const tx=transactions[id]; if(!tx || tx.isDeleted) return;
   $("editTxId").value=id;$("editModalTitle").textContent=tx.isPending?"💰 補上消費金額":"✏️ 修改這筆消費";
   $("editItem").value=tx.item||"";$("editAmount").value=tx.isPending?"":tx.amount;$("editPending").checked=!!tx.isPending;
   $("editAmount").disabled=!!tx.isPending;$("editDate").value=tx.date||taiwanDateString();
-  $("editCategory").value=tx.category||"餐飲";window.selectRadio("editPayerGroup",tx.payer);window.selectRadio("editSplitGroup",tx.splitType||"split");
+window.selectRadio("editPayerGroup",tx.payer);window.selectRadio("editSplitGroup",tx.splitType||"split");
   $("editModal").classList.add("open");
 };
 window.toggleEditPending=()=>{const p=$("editPending").checked;$("editAmount").disabled=p;if(p)$("editAmount").value="";};
 window.saveEditedTx=async(event)=>{
   event.preventDefault();const id=$("editTxId").value,old=transactions[id];if(!old||old.isDeleted)return;
   const pending=$("editPending").checked,amount=pending?0:Number($("editAmount").value);
-  const after={item:$("editItem").value.trim(),amount,isPending:pending,payer:getRadioVal("editPayerGroup"),splitType:getRadioVal("editSplitGroup"),date:$("editDate").value,category:$("editCategory").value};
+  const after={item:$("editItem").value.trim(),amount,isPending:pending,payer:getRadioVal("editPayerGroup"),splitType:getRadioVal("editSplitGroup"),date:$("editDate").value};
   if(!after.item||(!pending&&(!Number.isSafeInteger(amount)||amount<=0))||!after.date||!["Benson","佩筠"].includes(after.payer)||!["split","advance"].includes(after.splitType))return alert("請確認項目、日期、付款人及正整數金額。");
   try{await update(ref(db,"transactions/"+id),{...after,updatedAt:Date.now(),updatedByUid:currentUser.uid,updatedBy:currentMember});await audit("update","修改："+old.item+" → "+after.item,old,after);window.closeModals();}
   catch(e){alert("修改失敗，請確認資料庫權限。");}
