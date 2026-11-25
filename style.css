@@ -1,0 +1,305 @@
+:root {
+    --bg-color: #f4f6f9;
+    --card-bg: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --benson-color: #2563eb;
+    --benson-bg: #eff6ff;
+    --peijun-color: #db2777;
+    --peijun-bg: #fdf2f8;
+    --warning-color: #d97706;
+    --warning-bg: #fef3c7;
+    --success-color: #059669;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+    font-family: 'Inter', 'Noto Sans TC', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    line-height: 1.5;
+    padding-bottom: 80px;
+}
+
+.app-container {
+    max-width: 540px;
+    margin: 0 auto;
+    padding: 16px;
+}
+
+/* 頂部標題與連線狀態 */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 4px 2px;
+}
+
+.header h1 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sync-badge {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    color: #475569;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+}
+
+.sync-badge.online { background: #dcfce7; color: #166534; }
+.sync-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+/* 結算看板卡片 */
+.summary-card {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    color: #ffffff;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.summary-label { font-size: 0.95rem; color: #cbd5e1; margin-bottom: 6px; }
+.summary-label strong.benson { color: #60a5fa; }
+.summary-label strong.peijun { color: #f472b6; }
+
+.summary-amount {
+    font-size: 2.2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+}
+
+.summary-actions { display: flex; gap: 10px; justify-content: center; }
+
+.btn {
+    border: none;
+    border-radius: 12px;
+    padding: 10px 18px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: transform 0.1s, opacity 0.2s;
+    font-family: inherit;
+}
+
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: #3b82f6; color: white; flex: 1; }
+.btn-settle { background: rgba(255,255,255,0.15); color: white; }
+.btn-settle:hover { background: rgba(255,255,255,0.25); }
+.btn-full { width: 100%; padding: 14px; font-size: 1rem; margin-top: 6px; }
+.btn-success { background: var(--success-color); }
+
+/* 操作身份切換器 */
+.user-switcher {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.85rem;
+}
+
+.user-pills { display: flex; gap: 6px; }
+.user-pill {
+    padding: 5px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+.user-pill.active[data-user="Benson"] { background: var(--benson-bg); color: var(--benson-color); border-color: var(--benson-color); }
+.user-pill.active[data-user="佩筠"] { background: var(--peijun-bg); color: var(--peijun-color); border-color: var(--peijun-color); }
+
+/* 篩選分頁 */
+.tabs { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; }
+.tab {
+    padding: 7px 14px;
+    border-radius: 999px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+}
+.tab.active { background: var(--text-main); color: #ffffff; border-color: var(--text-main); }
+
+.badge-count {
+    background: var(--warning-color);
+    color: white;
+    font-size: 0.72rem;
+    padding: 1px 6px;
+    border-radius: 999px;
+    margin-left: 4px;
+}
+
+/* 帳目列表卡片 */
+.tx-list { display: flex; flex-direction: column; gap: 12px; }
+.tx-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+}
+.tx-card.pending { border-left: 4px solid var(--warning-color); background: #fffbeb; }
+.tx-card.settlement { background: #f8fafc; border-style: dashed; }
+
+.tx-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.tx-left { display: flex; gap: 12px; align-items: center; }
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+.avatar.benson { background: var(--benson-bg); color: var(--benson-color); }
+.avatar.peijun { background: var(--peijun-bg); color: var(--peijun-color); }
+
+.tx-title { font-weight: 700; font-size: 1rem; color: var(--text-main); }
+.tx-meta { font-size: 0.78rem; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 2px; }
+
+.tag { padding: 2px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 600; background: #f1f5f9; color: #475569; }
+.tag.split { background: #e0e7ff; color: #3730a3; }
+.tag.advance { background: #fce7f3; color: #9d174d; }
+
+.tx-amount { font-weight: 700; font-size: 1.1rem; text-align: right; }
+.tx-amount.pending-text { color: var(--warning-color); font-size: 0.9rem; }
+
+.tx-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.tx-actions { display: flex; gap: 8px; }
+.action-btn {
+    background: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+.action-btn.fill { background: var(--warning-bg); color: var(--warning-color); border-color: #fcd34d; }
+.action-btn.delete { color: #ef4444; }
+
+/* 歷史日誌區塊 */
+.log-card {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 0.85rem;
+    color: var(--text-main);
+}
+.log-time { font-size: 0.75rem; color: #94a3b8; margin-top: 4px; }
+
+/* 彈出表單 Modal */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 100;
+}
+.modal-backdrop.open { display: flex; }
+
+.modal {
+    background: var(--card-bg);
+    width: 100%;
+    max-width: 540px;
+    border-radius: 24px 24px 0 0;
+    padding: 24px;
+    animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+.modal-title { font-size: 1.15rem; font-weight: 700; }
+.close-btn { background: none; border: none; font-size: 1.3rem; color: var(--text-muted); cursor: pointer; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-group { margin-bottom: 14px; }
+.form-label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-main); }
+.form-input, .form-select {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    font-size: 1rem;
+    font-family: inherit;
+}
+
+.radio-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.radio-btn {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    background: #f8fafc;
+}
+.radio-btn.selected {
+    border-color: var(--benson-color);
+    background: var(--benson-bg);
+    color: var(--benson-color);
+}
+
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: var(--warning-color);
+    font-weight: 600;
+}
+
+.empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 0.9rem; }
