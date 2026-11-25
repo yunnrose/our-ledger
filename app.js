@@ -188,7 +188,14 @@ window.shareLedger=async()=>{
     else alert("請複製瀏覽器網址分享帳本");
   }catch(e){if(e.name!=="AbortError")alert("分享失敗，請直接複製網址");}
 };
-window.openSettings=()=>{if(confirm("目前操作身分："+(currentMember||"未選擇")+"\n要切換操作身分嗎？")){$("switchIdentityBtn").click();}};
+window.openSettings=()=>{
+  if(!confirm("目前操作身分："+(currentMember||"未選擇")+"\n要切換操作身分嗎？")) return;
+  currentMember=null;
+  if(stopTransactions){stopTransactions();stopTransactions=null;}
+  if(stopLogs){stopLogs();stopLogs=null;}
+  $("chatApp").hidden=true;
+  $("identityScreen").hidden=false;
+};
 
 window.toggleBalanceDetails=()=>{const el=$("balanceDetails");el.hidden=!el.hidden;document.querySelector(".balance-toggle").setAttribute("aria-expanded",String(!el.hidden));};
 window.setSearch=(value)=>{searchTerm=value.trim();renderChat();};
