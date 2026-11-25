@@ -67,3 +67,22 @@ test("撤銷紀錄保留在資料中但不參與結算", () => {
   assert.equal(r.netBalance, 0);
   assert.equal(r.totalExpense, 0);
 });
+
+
+test("自然語言辨識晚餐 850 Benson 付，預設平分", () => {
+  const r = parseNaturalLanguage("晚餐 850 Benson 付", "佩筠", new Date("2026-11-25T04:00:00Z"));
+  assert.equal(r.ok, true);
+  assert.equal(r.transaction.item, "晚餐");
+  assert.equal(r.transaction.amount, 850);
+  assert.equal(r.transaction.payer, "Benson");
+  assert.equal(r.transaction.splitType, "split");
+});
+
+test("自然語言辨識昨天咖啡 90 Benson 付", () => {
+  const r = parseNaturalLanguage("昨天咖啡 90 Benson 付", "佩筠", new Date("2026-11-25T04:00:00Z"));
+  assert.equal(r.ok, true);
+  assert.equal(r.transaction.item, "咖啡");
+  assert.equal(r.transaction.amount, 90);
+  assert.equal(r.transaction.payer, "Benson");
+  assert.equal(r.transaction.date, "2026-11-24");
+});
