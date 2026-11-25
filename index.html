@@ -9,11 +9,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- 加上 ?v=2 強制瀏覽器讀取最新 CSS -->
-    <link rel="stylesheet" href="style.css?v=6">
+    <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
 
-<section id="identityScreen" class="auth-screen" hidden>
+<section id="identityScreen" class="auth-screen">
   <div class="auth-card identity-card">
     <div class="auth-mark">💕</div>
     <h1>佩筠 × Benson</h1>
@@ -21,7 +21,7 @@
     <p class="identity-hint">請選擇這次要使用的操作身分</p>
     <button type="button" class="identity-choice benson-choice" onclick="selectIdentity('Benson')">💙 我是 Benson</button>
     <button type="button" class="identity-choice peijun-choice" onclick="selectIdentity('佩筠')">💜 我是 佩筠</button>
-    <p id="identityError" role="alert" class="auth-error"></p>
+    <p id="identityError" role="alert" class="auth-error">正在連線至共享帳本…</p>
     <small>此選擇僅用於標示記帳操作者，並非個人身分驗證。</small>
   </div>
 </section>
@@ -163,7 +163,7 @@
     </div>
 </div>
 
-<script type="module" src="app.js?v=7"></script>
+<script type="module" src="app.js?v=8"></script>
 
 <div id="calculatorModal" class="modal-backdrop"><div class="modal"><div class="modal-header"><h3 class="modal-title">🧮 小計算機</h3><button class="close-btn" type="button" onclick="closeModals()">×</button></div><input id="calcDisplay" class="form-input" value="0" readonly><div class="calculator-grid"><button type="button" onclick="calcPress('7')">7</button><button type="button" onclick="calcPress('8')">8</button><button type="button" onclick="calcPress('9')">9</button><button type="button" onclick="calcPress('÷')">÷</button><button type="button" onclick="calcPress('4')">4</button><button type="button" onclick="calcPress('5')">5</button><button type="button" onclick="calcPress('6')">6</button><button type="button" onclick="calcPress('×')">×</button><button type="button" onclick="calcPress('1')">1</button><button type="button" onclick="calcPress('2')">2</button><button type="button" onclick="calcPress('3')">3</button><button type="button" onclick="calcPress('−')">−</button><button type="button" onclick="calcPress('C')">C</button><button type="button" onclick="calcPress('0')">0</button><button type="button" onclick="calcPress('.')">.</button><button type="button" onclick="calcPress('+')">+</button><button type="button" onclick="calcPress('=')">=</button></div></div></div>
 
