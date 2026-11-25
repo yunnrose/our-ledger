@@ -45,7 +45,7 @@ export function calculateLedger(transactions = {}, now = new Date()) {
   };
 
   for (const tx of Object.values(transactions || {})) {
-    if (!tx || typeof tx !== "object") continue;
+    if (!tx || typeof tx !== "object" || tx.isDeleted === true) continue;
     if (tx.isPending) {
       result.pendingCount += 1;
       continue;
@@ -54,9 +54,10 @@ export function calculateLedger(transactions = {}, now = new Date()) {
     if (!Number.isSafeInteger(amount) || amount < 0) continue;
 
     if (tx.type === "settlement") {
-      if (!MEMBERS.includes(tx.payer) || !MEMBERS.includes(tx.receiver) ||
-          tx.payer === tx.receiver || amount <= 0) continue;
-      // Payment from 佩筠 to Benson reduces the amount 佩筠 owes.
+      const receiver = tx.receiver || (tx.payer === "Benson" ? "佩筠" : "Benson");
+      if (!MEMBERS.includes(tx.payer) || !MEMBERS.includes(receiver) ||
+          tx.payer === receiver || amount <= 0) continue;
+      // Legacy rows omit receiver; infer the historical opposite member.
       result.netBalance += tx.payer === "Benson" ? amount : -amount;
       result.settlements += amount;
       continue;
