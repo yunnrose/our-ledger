@@ -415,3 +415,29 @@ body {
 .btn-green { background: #10b981; }
 .log-item { background: #f8fafc; padding: 10px 12px; border-radius: 12px; font-size: 0.82rem; }
 .empty-chat { text-align: center; margin: auto; color: var(--text-muted); font-size: 0.9rem; }
+
+
+
+/* v1.1 shared-room identity selection */
+[hidden] { display: none !important; }
+.auth-screen {
+  min-height: 100vh; width:100%; display:flex; align-items:center; justify-content:center;
+  padding:24px; background:linear-gradient(145deg,#eff8ff 0%,#f7efff 100%);
+}
+.auth-card {
+  width:min(100%,390px); padding:30px; border-radius:26px; background:#fff;
+  box-shadow:0 18px 60px rgba(71,65,110,.14); display:flex; flex-direction:column; gap:12px;
+}
+.auth-mark {font-size:2rem;text-align:center}
+.auth-card h1 {text-align:center;margin:0;font-size:1.45rem}
+.auth-card p {text-align:center;color:#7b8495;margin:0}
+.auth-card .identity-hint {margin-top:8px;color:#475569;font-weight:700}
+.identity-choice {
+  border:0;border-radius:14px;padding:14px;color:#fff;font:inherit;font-weight:700;cursor:pointer;
+}
+.identity-choice.benson-choice {background:linear-gradient(120deg,#0ea5e9,#38bdf8)}
+.identity-choice.peijun-choice {background:linear-gradient(120deg,#9333ea,#c084fc)}
+.auth-card small {text-align:center;color:#94a3b8;line-height:1.5;margin-top:4px}
+.auth-card .auth-error {color:#dc2626;min-height:1.2em;margin:4px 0 0;font-size:.84rem}
+.account-tools {display:flex;align-items:center;gap:10px;font-size:.8rem;color:var(--text-muted)}
+.account-tools button {border:1px solid #e2e8f0;background:#fff;border-radius:999px;padding:6px 12px;cursor:pointer}
