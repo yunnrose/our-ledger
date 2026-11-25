@@ -13,7 +13,21 @@
 </head>
 <body>
 
-<div class="chat-app">
+<section id="authScreen" class="auth-screen">
+  <form id="loginForm" class="auth-card">
+    <div class="auth-mark">💕</div>
+    <h1>佩筠 × Benson</h1>
+    <p>請使用自己的帳號登入共享帳本</p>
+    <label for="loginEmail">Email</label>
+    <input id="loginEmail" type="email" autocomplete="username" required>
+    <label for="loginPassword">密碼</label>
+    <input id="loginPassword" type="password" autocomplete="current-password" required>
+    <button id="loginSubmit" type="submit">登入聊天室</button>
+    <p id="authError" role="alert" class="auth-error"></p>
+  </form>
+</section>
+
+<div class="chat-app" id="chatApp" hidden>
     <!-- 頂部固定導覽與結算膠囊 -->
     <header class="chat-header">
         <div class="header-top">
@@ -28,9 +42,9 @@
                 </div>
             </div>
             <!-- 切換目前是誰在傳訊息 -->
-            <div class="sender-switch">
-                <button class="sender-btn active" data-user="Benson" onclick="setOperator('Benson')">我是 Benson</button>
-                <button class="sender-btn" data-user="佩筠" onclick="setOperator('佩筠')">我是 佩筠</button>
+            <div class="account-tools">
+                <span id="currentIdentity">已登入</span>
+                <button id="logoutBtn" type="button">登出</button>
             </div>
         </div>
 
@@ -180,6 +194,6 @@
     </div>
 </div>
 
-<script type="module" src="app.js?v=2"></script>
+<script type="module" src="app.js?v=3"></script>
 </body>
 </html>
