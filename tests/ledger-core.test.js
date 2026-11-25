@@ -100,14 +100,16 @@ test("辨識雙方還款自然語言", () => {
   assert.equal(r.ok,true); assert.equal(r.transaction.type,"settlement"); assert.equal(r.transaction.payer,"Benson"); assert.equal(r.transaction.receiver,"佩筠"); assert.equal(r.transaction.amount,500);
 });
 
-\ntest("未輸入金額時自動視為待補，不需輸入待補文字", () => {
+
+test("未輸入金額時自動視為待補，不需輸入待補文字", () => {
   const r = parseNaturalLanguage("超商", "佩筠", new Date("2026-11-25T04:00:00Z"));
   assert.equal(r.ok, true);
   assert.equal(r.transaction.item, "超商");
   assert.equal(r.transaction.isPending, true);
   assert.equal(r.transaction.amount, 0);
 });
-\ntest("資料庫金額為空白或缺漏時視為待補且不納入結算", () => {
+
+test("資料庫金額為空白或缺漏時視為待補且不納入結算", () => {
   const r = calculateLedger({
     a:{type:"expense",item:"早餐",amount:"",payer:"Benson"},
     b:{type:"expense",item:"交通",payer:"佩筠"}
