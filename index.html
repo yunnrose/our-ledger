@@ -66,6 +66,16 @@
     <section id="calendarPanel" class="calendar-panel" hidden>
       <div class="calendar-head"><button type="button" onclick="changeCalendarMonth(-1)">‹</button><strong id="calendarTitle"></strong><button type="button" onclick="changeCalendarMonth(1)">›</button><button type="button" onclick="clearDateFilter()">全部</button></div>
       <div id="calendarGrid" class="calendar-grid"></div>
+      <!-- selected date details render here -->
+      <section id="calendarDayModal" class="calendar-day-panel" hidden>
+        <div class="calendar-day-heading"><h3 id="calendarDayTitle">當日帳務</h3></div>
+        <div id="calendarDaySummary" class="calendar-day-summary"></div>
+        <div class="calendar-day-actions">
+          <button type="button" class="calendar-add-expense" onclick="openCalendarExpenseModal()"><i class="fa-solid fa-plus"></i> 新增支出</button>
+          <button type="button" class="calendar-add-repayment" onclick="openCalendarRepaymentModal()"><i class="fa-solid fa-wallet"></i> 新增還款</button>
+        </div>
+        <div class="calendar-day-records"><h4>當日紀錄</h4><div id="calendarDayRecords"></div></div>
+      </section>
     </section>
   </header>
   <nav class="ledger-tabs" aria-label="帳本檢視">
@@ -165,21 +175,7 @@
     </div>
 </div>
 
-<!-- 月曆日期帳務視窗 -->
-<div id="calendarDayModal" class="modal-backdrop">
-  <div class="modal calendar-day-modal">
-    <div class="modal-header">
-      <h3 id="calendarDayTitle" class="modal-title">當日帳務</h3>
-      <button type="button" class="close-btn" onclick="closeModals()"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div id="calendarDaySummary" class="calendar-day-summary"></div>
-    <div class="calendar-day-actions">
-      <button type="button" class="calendar-add-expense" onclick="openCalendarExpenseModal()"><i class="fa-solid fa-plus"></i> 新增支出</button>
-      <button type="button" class="calendar-add-repayment" onclick="openCalendarRepaymentModal()"><i class="fa-solid fa-wallet"></i> 新增還款</button>
-    </div>
-    <div class="calendar-day-records"><h4>當日紀錄</h4><div id="calendarDayRecords"></div></div>
-  </div>
-</div>
+
 
 <div id="calendarExpenseModal" class="modal-backdrop">
   <div class="modal">
