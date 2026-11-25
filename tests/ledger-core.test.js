@@ -51,3 +51,19 @@ test("自然語言辨識待補", () => {
 test("還款不能超過餘額", () => {
   assert.match(validateSettlement({payer:"佩筠",receiver:"Benson",amount:301}, 300), /超過/);
 });
+
+test("舊版還款紀錄沒有 receiver 時仍可正確結算", () => {
+  const r = calculateLedger({
+    a:{ type:"expense", amount:1000, payer:"Benson", splitType:"split", date:"2026-11-25" },
+    b:{ type:"settlement", amount:300, payer:"佩筠", date:"2026-11-25" }
+  });
+  assert.equal(r.netBalance, 200);
+});
+
+test("撤銷紀錄保留在資料中但不參與結算", () => {
+  const r = calculateLedger({
+    a:{ type:"expense", amount:1000, payer:"Benson", splitType:"split", date:"2026-11-25", isDeleted:true }
+  });
+  assert.equal(r.netBalance, 0);
+  assert.equal(r.totalExpense, 0);
+});
