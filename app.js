@@ -53,11 +53,6 @@ window.selectIdentity = (name) => {
   localStorage.setItem("ledger_operator", name);
   startSharedRoom();
 };
-$("switchIdentityBtn").addEventListener("click", () => {
-  currentMember = null;
-  $("chatApp").hidden = true;
-  $("identityScreen").hidden = false;
-});
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   if (!user) {
