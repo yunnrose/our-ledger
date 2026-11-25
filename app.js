@@ -14,6 +14,7 @@ let currentMember = null;
 let transactions = {};
 let logs = [];
 let filterPendingOnly = false;
+let activeLedgerTab = "all";
 let netBalance = 0;
 let searchTerm = "";
 let selectedDate = "";
@@ -103,55 +104,91 @@ function element(tag, className, text) {
 function renderChat() {
   const stream = $("chatStream");
   stream.replaceChildren();
-  const items = Object.entries(transactions)
-    .filter(([,tx]) => tx && !tx.isDeleted && (!filterPendingOnly || tx.isPending === true || tx.amount === null || tx.amount === undefined || tx.amount === "") && (!selectedDate || tx.date===selectedDate) && (!searchTerm || (String(tx.item||"")+" "+String(tx.category||"")).toLowerCase().includes(searchTerm.toLowerCase())))
+  const all = Object.entries(transactions)
+    .filter(([,tx]) => tx && !tx.isDeleted && (!selectedDate || tx.date===selectedDate) &&
+      (!searchTerm || (String(tx.item||"")+" "+String(tx.category||"")).toLowerCase().includes(searchTerm.toLowerCase())))
     .map(([id,tx]) => ({id,...tx}))
-    .sort((a,b) => String(a.date||"").localeCompare(String(b.date||"")) || (a.createdAt||0)-(b.createdAt||0));
+    .sort((a,b) => String(b.date||"").localeCompare(String(a.date||"")) || (b.createdAt||0)-(a.createdAt||0));
+  if (activeLedgerTab === "details") {
+    $("balanceDetails").hidden = false;
+    const result = calculateLedger(transactions);
+    const detail = element("section","detail-summary");
+    detail.append(element("h3","","帳本統計"));
+    [["本月支出",result.monthlyExpense],["累計支出",result.totalExpense],["Benson 已付款",result.paid.Benson],["佩筠 已付款",result.paid["佩筠"]],["Benson 應負擔",result.share.Benson],["佩筠 應負擔",result.share["佩筠"]]].forEach(([label,value])=>{
+      const item=element("div","detail-stat");item.append(element("span","",label),element("strong","",money(value)));detail.append(item);
+    });
+    stream.append(detail); return;
+  }
+  $("balanceDetails").hidden = true;
+  let items = activeLedgerTab === "repayment" ? all.filter(tx=>tx.type==="settlement") : all;
+  if (filterPendingOnly) items=items.filter(tx=>tx.type!=="settlement" && (tx.isPending===true || tx.amount===null || tx.amount===undefined || tx.amount===""));
   if (!items.length) {
-    stream.append(element("div","empty-chat",filterPendingOnly ? "目前沒有待補金額的訊息 ✨" : "在下方輸入第一筆消費，開始你們的記帳對話吧 💬"));
+    stream.append(element("div","empty-chat",activeLedgerTab==="repayment"?"目前還沒有還款紀錄":filterPendingOnly?"目前沒有待補金額的紀錄":"目前沒有記帳紀錄，從下方輸入第一筆吧 ♡"));
     return;
   }
-  let lastDate = "";
-  for (const tx of items) {
-    if (tx.date !== lastDate) {
-      lastDate = tx.date;
-      const d = new Date(tx.date + "T00:00:00+08:00");
-      stream.append(element("div","date-divider", Number.isNaN(d.getTime()) ? tx.date : new Intl.DateTimeFormat("zh-TW",{timeZone:"Asia/Taipei",month:"numeric",day:"numeric",weekday:"short"}).format(d)));
-    }
-    if (tx.type === "settlement") {
-      const pill = element("div","system-pill");
-      const receiver = tx.receiver || (tx.payer === "Benson" ? "佩筠" : "Benson");
-      pill.append(element("span","", "💸 " + tx.payer + " 還款給 " + receiver + " " + money(tx.amount)));
-      const del = element("button","b-btn del","撤銷");
-      del.type = "button"; del.addEventListener("click",()=>deleteTx(tx.id)); pill.append(del);
-      stream.append(pill); continue;
-    }
-    const isBenson = tx.payer === "Benson";
-    const row = element("div","msg-row " + (isBenson ? "left" : "right"));
-    const avatar = element("div","msg-avatar", isBenson ? "💙" : "💜");
-    const img = document.createElement("img");
-    img.src = isBenson ? "benson.png" : "peiyun.jpg"; img.alt = tx.payer;
-    img.addEventListener("error",()=>img.remove()); avatar.replaceChildren(img);
-    const content = element("div","msg-content");
-    content.append(element("div","msg-sender-name", tx.payer + " 付款"));
-    const isPending = tx.isPending === true || tx.amount === null || tx.amount === undefined || tx.amount === "";
-    const bubble = element("div","bubble" + (isPending ? " pending" : ""));
-    const top = element("div","bubble-top");
-    top.append(element("span","bubble-item",tx.item || "未命名項目"));
-    top.append(element("span","bubble-amount"+(isPending?" pending-txt":""),isPending?"⏳ 待補":money(tx.amount)));
-    bubble.append(top);
-    const tags = element("div","bubble-tags");
-    tags.append(element("span","b-tag "+(tx.splitType==="split"?"split":"advance"),tx.splitType==="split"?"兩人平分":(isBenson?"佩筠":"Benson")+"負擔"));
-    bubble.append(tags);
-    const footer = element("div","bubble-footer");
-    footer.append(element("span","",tx.shortTime || ""));
-    const actions = element("div","bubble-btns");
-    const edit = element("button","b-btn",isPending?"補金額":"修改"); edit.type="button"; edit.addEventListener("click",()=>openEditModal(tx.id));
-    const del = element("button","b-btn del","撤銷"); del.type="button"; del.addEventListener("click",()=>deleteTx(tx.id));
-    actions.append(edit,del); footer.append(actions); bubble.append(footer); content.append(bubble); row.append(avatar,content); stream.append(row);
+  // Show a compact audit timeline above the ledger, preserving the existing logs path.
+  if (activeLedgerTab==="all" && !filterPendingOnly && logs.length) {
+    const history=element("section","audit-timeline");
+    logs.slice(0,6).forEach(log=>{
+      const line=element("div","audit-entry");
+      line.append(element("span","audit-icon","🖊️"));
+      const detail=element("span","audit-copy",(log.actorName||log.operator||"使用者")+" "+(log.message||"更新紀錄"));
+      line.append(detail);
+      if(log.timeStr) line.append(element("span","audit-time","· "+log.timeStr));
+      history.append(line);
+    });
+    stream.append(history);
   }
-  stream.scrollTop = stream.scrollHeight;
+  let lastDate="";
+  for(const tx of items){
+    if(tx.date!==lastDate){
+      lastDate=tx.date;
+      const d=new Date((tx.date||"")+"T00:00:00+08:00");
+      stream.append(element("div","date-divider",Number.isNaN(d.getTime())?tx.date:new Intl.DateTimeFormat("zh-TW",{timeZone:"Asia/Taipei",month:"numeric",day:"numeric"}).format(d)));
+    }
+    if(tx.type==="settlement"){
+      const card=element("article","ledger-card repayment-card");
+      const head=element("div","ledger-card-head");
+      head.append(element("strong","","💸 "+tx.payer+" 還款給 "+(tx.receiver||(tx.payer==="Benson"?"佩筠":"Benson"))));
+      head.append(element("strong","ledger-amount",money(tx.amount)));
+      card.append(head,element("div","ledger-meta",(tx.date||"")+" · 還款紀錄"));
+      const actions=element("div","ledger-actions");
+      const del=element("button","ledger-action danger","撤銷");del.type="button";del.addEventListener("click",()=>deleteTx(tx.id));actions.append(del);card.append(actions);stream.append(card);continue;
+    }
+    const pending=tx.isPending===true||tx.amount===null||tx.amount===undefined||tx.amount==="";
+    const card=element("article","ledger-card"+(pending?" pending-card":""));
+    const head=element("div","ledger-card-head");
+    head.append(element("strong","ledger-item",tx.item||"未命名項目"));
+    head.append(element("strong","ledger-amount"+(pending?" pending-txt":""),pending?"⏳ 待補":money(tx.amount)));
+    card.append(head);
+    const meta=element("div","ledger-meta");
+    meta.append(element("span","","🗓 "+(tx.date||"日期未設定")));
+    meta.append(element("span","payer-tag",tx.payer+" 付"));
+    meta.append(element("span","",tx.splitType==="split"?"兩人平分":(tx.payer==="Benson"?"佩筠":"Benson")+" 負擔"));
+    if(tx.category) meta.append(element("span","",tx.category));
+    card.append(meta);
+    if(tx.updatedBy||tx.updatedAt) card.append(element("div","ledger-updated","🖊 "+(tx.updatedBy||tx.createdBy||tx.payer)+" 於 "+(tx.updatedAt?new Intl.DateTimeFormat("zh-TW",{timeZone:"Asia/Taipei",month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date(tx.updatedAt)):"更新")+" "+(pending?"補上金額":"修改紀錄")));
+    const actions=element("div","ledger-actions");
+    const edit=element("button","ledger-action",pending?"補金額":"修改");edit.type="button";edit.addEventListener("click",()=>openEditModal(tx.id));
+    const del=element("button","ledger-action danger","撤銷");del.type="button";del.addEventListener("click",()=>deleteTx(tx.id));
+    actions.append(edit,del);card.append(actions);stream.append(card);
+  }
 }
+window.setLedgerTab=(tab)=>{
+  activeLedgerTab=tab;
+  document.querySelectorAll(".ledger-tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
+  if(tab==="details") $("balanceDetails").hidden=false;
+  renderChat();
+};
+window.toggleSearch=()=>{$("searchPanel").hidden=!$("searchPanel").hidden;if(!$("searchPanel").hidden)$("searchInput").focus();};
+window.shareLedger=async()=>{
+  try{
+    if(navigator.share) await navigator.share({title:"佩筠 × Benson 的小帳本",url:location.href});
+    else if(navigator.clipboard){await navigator.clipboard.writeText(location.href);alert("帳本連結已複製");}
+    else alert("請複製瀏覽器網址分享帳本");
+  }catch(e){if(e.name!=="AbortError")alert("分享失敗，請直接複製網址");}
+};
+window.openSettings=()=>{if(confirm("目前操作身分："+(currentMember||"未選擇")+"\n要切換操作身分嗎？")){$("switchIdentityBtn").click();}};
 
 window.toggleBalanceDetails=()=>{const el=$("balanceDetails");el.hidden=!el.hidden;document.querySelector(".balance-toggle").setAttribute("aria-expanded",String(!el.hidden));};
 window.setSearch=(value)=>{searchTerm=value.trim();renderChat();};
