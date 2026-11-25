@@ -48,7 +48,7 @@
         </div>
 
         <!-- 置頂結算橫幅 -->
-        <div class="balance-banner">
+        <button class="balance-banner balance-toggle" type="button" onclick="toggleBalanceDetails()" aria-expanded="false">
             <div class="balance-info">
                 <span id="settlementText">計算中...</span>
                 <strong id="settlementAmount">NT$ 0</strong>
@@ -65,7 +65,24 @@
                 </button>
             </div>
         </div>
-    </header>
+    </button>
+    <section id="balanceDetails" class="balance-details" hidden>
+      <div><span>本月支出</span><strong id="monthlyExpense">NT$ 0</strong></div>
+      <div><span>累計支出</span><strong id="totalExpense">NT$ 0</strong></div>
+      <div><span>Benson 已付款</span><strong id="bensonPaid">NT$ 0</strong></div>
+      <div><span>佩筠 已付款</span><strong id="peijunPaid">NT$ 0</strong></div>
+      <div><span>佩筠應負擔</span><strong id="peijunShare">NT$ 0</strong></div>
+      <div><span>Benson應負擔</span><strong id="bensonShare">NT$ 0</strong></div>
+    </section>
+    <section class="tools-bar">
+      <button type="button" onclick="toggleCalendar()">📅 月曆</button>
+      <button type="button" onclick="openCalculator()">🧮 計算機</button>
+      <input id="searchInput" type="search" placeholder="搜尋項目或分類關鍵字" oninput="setSearch(this.value)" aria-label="搜尋紀錄">
+    </section>
+    <section id="calendarPanel" class="calendar-panel" hidden>
+      <div class="calendar-head"><button type="button" onclick="changeCalendarMonth(-1)">‹</button><strong id="calendarTitle"></strong><button type="button" onclick="changeCalendarMonth(1)">›</button><button type="button" onclick="clearDateFilter()">全部</button></div>
+      <div id="calendarGrid" class="calendar-grid"></div>
+    </section>
 
     <!-- 中間聊天氣泡滾動區 -->
     <main id="chatStream" class="chat-stream">
@@ -163,5 +180,8 @@
 </div>
 
 <script type="module" src="app.js?v=4"></script>
+
+<div id="calculatorModal" class="modal-backdrop"><div class="modal"><div class="modal-header"><h3 class="modal-title">🧮 小計算機</h3><button class="close-btn" type="button" onclick="closeModals()">×</button></div><input id="calcDisplay" class="form-input" value="0" readonly><div class="calculator-grid"><button type="button" onclick="calcPress('7')">7</button><button type="button" onclick="calcPress('8')">8</button><button type="button" onclick="calcPress('9')">9</button><button type="button" onclick="calcPress('÷')">÷</button><button type="button" onclick="calcPress('4')">4</button><button type="button" onclick="calcPress('5')">5</button><button type="button" onclick="calcPress('6')">6</button><button type="button" onclick="calcPress('×')">×</button><button type="button" onclick="calcPress('1')">1</button><button type="button" onclick="calcPress('2')">2</button><button type="button" onclick="calcPress('3')">3</button><button type="button" onclick="calcPress('−')">−</button><button type="button" onclick="calcPress('C')">C</button><button type="button" onclick="calcPress('0')">0</button><button type="button" onclick="calcPress('.')">.</button><button type="button" onclick="calcPress('+')">+</button><button type="button" onclick="calcPress('=')">=</button></div></div></div>
+
 </body>
 </html>
