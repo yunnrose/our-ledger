@@ -62,16 +62,14 @@ onAuthStateChanged(auth, async (user) => {
   if (!user) {
     try { await signInAnonymously(auth); }
     catch (error) {
-      $("identityError").textContent = "無法連線至共享聊天室，請稍後再試。";
+      $("identityScreen").hidden = false;
+      $("chatApp").hidden = true;
+      $("identityError").textContent = "無法連線至共享聊天室，請確認 Firebase 已啟用 Anonymous Authentication。";
     }
     return;
   }
-  const saved = localStorage.getItem("ledger_operator");
-  if (["佩筠","Benson"].includes(saved)) window.selectIdentity(saved);
-  else {
-    $("identityScreen").hidden = false;
-    $("chatApp").hidden = true;
-  }
+  $("identityScreen").hidden = false;
+  $("chatApp").hidden = true;
 });
 
 function audit(action, message, before = null, after = null) {
