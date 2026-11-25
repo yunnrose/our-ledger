@@ -51,7 +51,7 @@ export function calculateLedger(transactions = {}, now = new Date()) {
       continue;
     }
     const amount = Number(tx.amount);
-    if (!Number.isSafeInteger(amount) || amount < 0) continue;
+    if (!Number.isFinite(amount) || amount < 0) continue;
 
     if (tx.type === "settlement") {
       const receiver = tx.receiver || (tx.payer === "Benson" ? "佩筠" : "Benson");
