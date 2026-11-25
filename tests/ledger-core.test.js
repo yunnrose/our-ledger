@@ -86,3 +86,16 @@ test("自然語言辨識昨天咖啡 90 Benson 付", () => {
   assert.equal(r.transaction.payer, "Benson");
   assert.equal(r.transaction.date, "2026-11-24");
 });
+
+test("缺少付款人時預設目前操作身分", () => {
+  const r=parseNaturalLanguage("超商 120","佩筠",new Date("2026-11-25T04:00:00Z"));
+  assert.equal(r.ok,true); assert.equal(r.transaction.payer,"佩筠"); assert.equal(r.transaction.item,"超商");
+});
+test("辨識月日日期與對方全額負擔", () => {
+  const r=parseNaturalLanguage("11/25 晚餐 850 Benson付 全算對方的","佩筠",new Date("2026-11-25T04:00:00Z"));
+  assert.equal(r.ok,true); assert.equal(r.transaction.date,"2026-11-25"); assert.equal(r.transaction.splitType,"advance");
+});
+test("辨識雙方還款自然語言", () => {
+  const r=parseNaturalLanguage("Benson 還給 佩筠 500","Benson",new Date("2026-11-25T04:00:00Z"));
+  assert.equal(r.ok,true); assert.equal(r.transaction.type,"settlement"); assert.equal(r.transaction.payer,"Benson"); assert.equal(r.transaction.receiver,"佩筠"); assert.equal(r.transaction.amount,500);
+});
