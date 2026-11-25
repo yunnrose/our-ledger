@@ -728,3 +728,10 @@ button.calendar-summary-item.pending-summary:disabled{opacity:.72}
 .calendar-day-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
 .calendar-summary-item{border:0;text-align:left;cursor:default}
 .calendar-day-actions{grid-template-columns:1fr}
+
+
+/* Calendar records are interactive: tap to edit or complete pending amounts */
+.calendar-record-button{width:100%;border:0;background:transparent;text-align:left;font:inherit;cursor:pointer}
+.calendar-record-button:hover,.calendar-record-button:focus-visible{background:#f3f8fc;border-radius:10px;outline:2px solid #cfe4f2;outline-offset:-2px}
+.calendar-record-pending{background:#fffaf0;border-radius:10px;padding-left:9px;padding-right:9px}
+.calendar-record-button .calendar-record-value{display:flex;align-items:center;gap:5px}
