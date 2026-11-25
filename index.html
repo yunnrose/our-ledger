@@ -72,34 +72,15 @@
         <div class="empty-chat">正在載入你們的記帳對話... 🐻🐰</div>
     </main>
 
-    <!-- 底部聊天輸入列（快速記一筆） -->
+    <!-- 單一自然語言記帳輸入框 -->
     <footer class="chat-composer">
-        <div class="composer-chips">
-            <div class="chip-group">
-                <button type="button" class="chip active" data-payer="Benson" onclick="setQuickPayer('Benson')">💙 Benson 付</button>
-                <button type="button" class="chip" data-payer="佩筠" onclick="setQuickPayer('佩筠')">💜 佩筠 付</button>
-            </div>
-            <div class="chip-group">
-                <button type="button" class="chip active" data-split="split" onclick="setQuickSplit('split')">平分</button>
-                <button type="button" class="chip" data-split="advance" onclick="setQuickSplit('advance')">對方負擔</button>
-                <button type="button" class="chip pending-chip" id="quickPendingChip" onclick="toggleQuickPending()">待補</button>
-            </div>
-        </div>
-
         <form class="composer-input-row" onsubmit="sendQuickTx(event)">
-            <select id="quickCategory" class="cat-select" title="分類">
-                <option value="餐飲">🍽️</option>
-                <option value="日用品">🛒</option>
-                <option value="娛樂">🎬</option>
-                <option value="交通">🚗</option>
-                <option value="其他">📦</option>
-            </select>
-            <input type="text" id="quickItem" class="chat-input item-input" placeholder="買了什麼？(如:晚餐)" required>
-            <input type="number" id="quickAmount" class="chat-input amt-input" step="0.5" min="0" placeholder="$ 金額">
-            <button type="submit" class="send-btn" title="傳送記帳">
+            <input type="text" id="quickItem" class="chat-input item-input" placeholder="輸入記帳內容，例如：晚餐 850 Benson 付" autocomplete="off" required>
+            <button type="submit" class="send-btn" title="新增記錄" aria-label="新增記錄">
                 <i class="fa-solid fa-paper-plane"></i>
             </button>
         </form>
+        <div class="composer-hint">預設兩人平分 · 可輸入「今天早餐 120 我付」或「屈臣氏 Benson 付，金額待補」</div>
     </footer>
 </div>
 
@@ -137,21 +118,9 @@
                     <div class="radio-btn" data-val="advance" onclick="selectRadio('editSplitGroup', 'advance')">對方全額負擔</div>
                 </div>
             </div>
-            <div class="grid-2">
-                <div class="form-group">
-                    <label class="form-label">日期</label>
-                    <input type="date" id="editDate" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">分類</label>
-                    <select id="editCategory" class="form-select">
-                        <option value="餐飲">🍽️ 餐飲</option>
-                        <option value="日用品">🛒 日用品</option>
-                        <option value="娛樂">🎬 娛樂</option>
-                        <option value="交通">🚗 交通</option>
-                        <option value="其他">📦 其他</option>
-                    </select>
-                </div>
+            <div class="form-group">
+                <label class="form-label">日期</label>
+                <input type="date" id="editDate" class="form-input" required>
             </div>
             <button type="submit" class="btn-submit">儲存修改</button>
         </form>
