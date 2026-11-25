@@ -244,15 +244,8 @@ function renderCalendarDayModal(date){
  const d=new Date(date+"T00:00:00+08:00");
  $("calendarDayTitle").textContent=new Intl.DateTimeFormat("zh-TW",{timeZone:"Asia/Taipei",year:"numeric",month:"long",day:"numeric",weekday:"short"}).format(d);
  const summary=$("calendarDaySummary");summary.replaceChildren();
- [["支出總額",money(expenseTotal),"expense-summary"],["還款總額",money(repaymentTotal),"repayment-summary"],["待補筆數",pendingCount+" 筆","pending-summary"]].forEach(([label,value,cls])=>{
-   const item=element("button","calendar-summary-item "+cls,label+" "+value);
-   item.type="button";
-   if(cls==="pending-summary"){
-     item.disabled=pendingCount===0;
-     item.title=pendingCount?"點擊補上待補金額":"目前沒有待補項目";
-     item.addEventListener("click",()=>openCalendarPendingItems(date));
-   }
-   summary.append(item);
+ [["支出總額",money(expenseTotal),"expense-summary"],["還款總額",money(repaymentTotal),"repayment-summary"]].forEach(([label,value,cls])=>{
+   summary.append(element("div","calendar-summary-item "+cls,label+" "+value));
  });
  const list=$("calendarDayRecords");list.replaceChildren();
  if(!records.length){list.append(element("p","calendar-no-records","這一天還沒有帳務紀錄。"));return;}
@@ -265,25 +258,6 @@ function renderCalendarDayModal(date){
    list.append(row);
  });
 }
-window.openCalendarPendingItems=(date)=>{
- const pending=Object.entries(transactions).filter(([,tx])=>tx&&!tx.isDeleted&&tx.date===date&&tx.type!=="settlement"&&(tx.isPending===true||tx.amount===null||tx.amount===undefined||tx.amount==="")).map(([id,tx])=>({id,...tx}));
- if(!pending.length)return;
- // 收起月曆及當日視窗，讓補金額視窗成為主要操作焦點。
- $("calendarDayModal").hidden=true;
- $("calendarPanel").hidden=true;
- if(pending.length===1){window.openEditModal(pending[0].id);return;}
- const list=$("calendarPendingPickerList");list.replaceChildren();
- pending.forEach(tx=>{
-   const button=element("button","calendar-pending-choice");
-   button.type="button";
-   const title=element("strong","",tx.item||"未命名項目");
-   const meta=element("span","",((tx.payer||"未指定付款人")+" 付款 · "+(tx.date||date)));
-   button.append(title,meta);
-   button.addEventListener("click",()=>{$("calendarPendingPickerModal").classList.remove("open");window.openEditModal(tx.id);});
-   list.append(button);
- });
- $("calendarPendingPickerModal").classList.add("open");
-};
 window.openCalendarDayModal=(date)=>{selectedCalendarDate=date||selectedCalendarDate;renderCalendarDayModal(selectedCalendarDate);$("calendarDayModal").hidden=false;};
 window.openCalendarExpenseModal=()=>{
  if(!selectedCalendarDate)return;
@@ -319,6 +293,23 @@ window.openCalendarRepaymentModal=()=>{
 window.openCalculator=()=>{$("calculatorModal").classList.add("open");};
 window.calcPress=(key)=>{if(key==="C")calcExpression="";else if(key==="="){try{const safe=calcExpression.replace(/×/g,"*").replace(/÷/g,"/").replace(/−/g,"-");if(!/^[0-9+*/.() -]+$/.test(safe))throw Error();calcExpression=String(Function('"use strict";return ('+safe+')')());}catch{calcExpression="錯誤";}}else calcExpression+=key;$("calcDisplay").value=calcExpression||"0";};
 
+window.openPendingModal=()=>{
+ const pending=Object.entries(transactions)
+   .filter(([,tx])=>tx&&!tx.isDeleted&&tx.type!=="settlement"&&(tx.isPending===true||tx.amount===null||tx.amount===undefined||tx.amount===""))
+   .map(([id,tx])=>({id,...tx}))
+   .sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))||(b.createdAt||0)-(a.createdAt||0));
+ const list=$("pendingList");list.replaceChildren();
+ if(!pending.length)list.append(element("p","calendar-no-records","目前沒有待補金額的紀錄。"));
+ pending.forEach(tx=>{
+   const button=element("button","calendar-pending-choice");
+   button.type="button";
+   button.append(element("strong","",tx.item||"未命名項目"));
+   button.append(element("span","",(tx.date||"日期未設定")+" · "+(tx.payer||"未指定付款人")+" 付款 · 金額待補"));
+   button.addEventListener("click",()=>{$("pendingModal").classList.remove("open");window.openEditModal(tx.id);});
+   list.append(button);
+ });
+ $("pendingModal").classList.add("open");
+};
 window.togglePendingFilter = () => {
   filterPendingOnly=!filterPendingOnly; $("pendingFilterBtn").classList.toggle("active",filterPendingOnly); renderChat();
 };
