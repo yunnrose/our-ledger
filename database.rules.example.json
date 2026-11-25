@@ -2,19 +2,13 @@
   "rules": {
     ".read": false,
     ".write": false,
-    "members": {
-      "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
-        ".write": false
-      }
-    },
     "transactions": {
-      ".read": "auth != null && root.child('members').child(auth.uid).child('active').val() === true",
-      ".write": "auth != null && root.child('members').child(auth.uid).child('active').val() === true"
+      ".read": "auth != null",
+      ".write": "auth != null"
     },
     "logs": {
-      ".read": "auth != null && root.child('members').child(auth.uid).child('active').val() === true",
-      ".write": "auth != null && root.child('members').child(auth.uid).child('active').val() === true"
+      ".read": "auth != null",
+      ".write": "auth != null"
     }
   }
 }
