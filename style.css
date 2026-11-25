@@ -678,3 +678,25 @@ body{display:flex;justify-content:center;align-items:stretch;background:#f8f5f1;
  .ledger-tabs{gap:5px}
  .ledger-tab{font-size:.76rem}
 }
+
+
+/* Calendar date actions and per-type markers */
+.calendar-day{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:42px}
+.calendar-dots{display:flex;align-items:center;justify-content:center;gap:3px;height:6px}
+.calendar-dot{display:block;width:5px;height:5px;border-radius:50%}
+.expense-dot{background:#78b8df}.repayment-dot{background:#78b98e}.pending-dot{background:#e7a746}
+.calendar-day-modal{display:flex;flex-direction:column;gap:14px}
+.calendar-day-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.calendar-summary-item{display:flex;flex-direction:column;gap:5px;padding:11px 9px;border-radius:14px;background:#f4f8fb;min-width:0}
+.calendar-summary-item span{font-size:.72rem;color:#8193a3}
+.calendar-summary-item strong{font-size:.88rem;color:#49647c;overflow-wrap:anywhere}
+.calendar-summary-item.repayment-summary{background:#eff8f2}.calendar-summary-item.pending-summary{background:#fff7e9}
+.calendar-day-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.calendar-day-actions button{border:0;border-radius:14px;padding:13px 9px;font:inherit;font-weight:700;cursor:pointer}
+.calendar-add-expense{background:#eaf5fd;color:#4d86ac}.calendar-add-repayment{background:#e8f4ed;color:#54866b}
+.calendar-day-records h4{font-size:.88rem;color:#657e93;margin-bottom:8px}
+.calendar-record-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px solid #edf1f4;font-size:.86rem}
+.calendar-record-name{min-width:0;overflow-wrap:anywhere;color:#536e83}
+.calendar-record-value{white-space:nowrap;color:#536e83}.calendar-record-value.pending-txt{color:#c48a32}
+.calendar-no-records{font-size:.84rem;color:#98a5b1;padding:8px 0}
+@media(max-width:380px){.calendar-day-summary{gap:5px}.calendar-summary-item{padding:9px 6px}.calendar-summary-item strong{font-size:.78rem}}
