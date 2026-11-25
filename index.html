@@ -9,22 +9,21 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- 加上 ?v=2 強制瀏覽器讀取最新 CSS -->
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 
-<section id="authScreen" class="auth-screen">
-  <form id="loginForm" class="auth-card">
+<section id="identityScreen" class="auth-screen" hidden>
+  <div class="auth-card identity-card">
     <div class="auth-mark">💕</div>
     <h1>佩筠 × Benson</h1>
-    <p>請使用自己的帳號登入共享帳本</p>
-    <label for="loginEmail">Email</label>
-    <input id="loginEmail" type="email" autocomplete="username" required>
-    <label for="loginPassword">密碼</label>
-    <input id="loginPassword" type="password" autocomplete="current-password" required>
-    <button id="loginSubmit" type="submit">登入聊天室</button>
-    <p id="authError" role="alert" class="auth-error"></p>
-  </form>
+    <p>歡迎回到你們的共享記帳聊天室</p>
+    <p class="identity-hint">請選擇這次要使用的操作身分</p>
+    <button type="button" class="identity-choice benson-choice" onclick="selectIdentity('Benson')">💙 我是 Benson</button>
+    <button type="button" class="identity-choice peijun-choice" onclick="selectIdentity('佩筠')">💜 我是 佩筠</button>
+    <p id="identityError" role="alert" class="auth-error"></p>
+    <small>此選擇僅用於標示記帳操作者，並非個人身分驗證。</small>
+  </div>
 </section>
 
 <div class="chat-app" id="chatApp" hidden>
@@ -43,8 +42,8 @@
             </div>
             <!-- 切換目前是誰在傳訊息 -->
             <div class="account-tools">
-                <span id="currentIdentity">已登入</span>
-                <button id="logoutBtn" type="button">登出</button>
+                <span id="currentIdentity">操作身分</span>
+                <button id="switchIdentityBtn" type="button">切換身分</button>
             </div>
         </div>
 
@@ -194,6 +193,6 @@
     </div>
 </div>
 
-<script type="module" src="app.js?v=3"></script>
+<script type="module" src="app.js?v=4"></script>
 </body>
 </html>
