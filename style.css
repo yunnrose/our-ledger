@@ -712,3 +712,11 @@ button.calendar-summary-item.pending-summary:disabled{opacity:.72}
 .calendar-pending-choice{display:flex;flex-direction:column;gap:5px;width:100%;padding:13px 14px;margin:7px 0;border:1px solid #f1dfbd;border-radius:13px;background:#fffaf1;text-align:left;cursor:pointer}
 .calendar-pending-choice strong{font-size:.92rem;color:#6e5b42}
 .calendar-pending-choice span{font-size:.78rem;color:#9a896f}
+
+
+/* Calendar selected-day details are inline below the month grid */
+.calendar-day-panel{margin-top:14px;padding-top:13px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:12px}
+.calendar-day-heading h3{margin:0;font-size:.96rem;color:#49647c;font-weight:700}
+.calendar-day-panel .calendar-day-summary{margin:0}
+.calendar-day-panel .calendar-day-records{max-height:220px;overflow:auto}
+.calendar-day-panel .calendar-day-actions{margin-top:0}
