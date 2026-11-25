@@ -205,7 +205,7 @@ window.toggleBalanceDetails=()=>{const el=$("balanceDetails");el.hidden=!el.hidd
 window.setSearch=(value)=>{searchTerm=value.trim();renderChat();};
 window.toggleCalendar=()=>{const el=$("calendarPanel");el.hidden=!el.hidden;if(!el.hidden)renderCalendar();};
 window.changeCalendarMonth=(delta)=>{calendarDate.setMonth(calendarDate.getMonth()+delta);renderCalendar();};
-window.clearDateFilter=()=>{selectedDate="";renderCalendar();renderChat();};
+window.clearDateFilter=()=>{selectedDate="";selectedCalendarDate="";renderCalendar();renderChat();};
 function renderCalendar(){
  const y=calendarDate.getFullYear(),m=calendarDate.getMonth(),first=new Date(y,m,1),days=new Date(y,m+1,0).getDate();
  $("calendarTitle").textContent=`${y}年 ${m+1}月`;
@@ -341,7 +341,7 @@ window.saveEditedTx=async(event)=>{
 };
 window.openSettleModal=()=>{
   const s=describeSettlement(netBalance);if(!s.amount)return alert("目前沒有待結清款項。");
-  $("settleAmount").value=s.amount;window.selectRadio("settleDirGroup",s.debtor+"->"+s.creditor);$("settleDate").value=selectedCalendarDate||taiwanDateString();$("settleModal").classList.add("open");
+  $("settleAmount").value=s.amount;window.selectRadio("settleDirGroup",s.debtor+"->"+s.creditor);$("settleDate").value=taiwanDateString();$("settleModal").classList.add("open");
 };
 window.saveSettlement=async(event)=>{
   event.preventDefault();const [payer,receiver]=getRadioVal("settleDirGroup").split("->"),amount=Number($("settleAmount").value);
