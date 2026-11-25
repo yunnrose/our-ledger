@@ -15,6 +15,10 @@ let transactions = {};
 let logs = [];
 let filterPendingOnly = false;
 let netBalance = 0;
+let searchTerm = "";
+let selectedDate = "";
+let calendarDate = new Date();
+let calcExpression = "";
 let stopTransactions = null;
 let stopLogs = null;
 
@@ -33,6 +37,7 @@ function startSharedRoom() {
     transactions = snapshot.val() || {};
     renderSummary();
     renderChat();
+    if (!$("calendarPanel").hidden) renderCalendar();
   }, () => $("syncStatus").textContent = "資料讀取失敗");
   stopLogs = onValue(logsRef, (snapshot) => {
     logs = Object.values(snapshot.val() || {}).sort((a,b) => (b.timestamp||0)-(a.timestamp||0));
@@ -86,6 +91,8 @@ function renderSummary() {
   if ($("totalExpense")) $("totalExpense").textContent = money(result.totalExpense);
   if ($("bensonPaid")) $("bensonPaid").textContent = money(result.paid.Benson);
   if ($("peijunPaid")) $("peijunPaid").textContent = money(result.paid["佩筠"]);
+  if ($("peijunShare")) $("peijunShare").textContent = money(result.share["佩筠"]);
+  if ($("bensonShare")) $("bensonShare").textContent = money(result.share.Benson);
 }
 function element(tag, className, text) {
   const el = document.createElement(tag);
@@ -97,7 +104,7 @@ function renderChat() {
   const stream = $("chatStream");
   stream.replaceChildren();
   const items = Object.entries(transactions)
-    .filter(([,tx]) => tx && !tx.isDeleted && (!filterPendingOnly || tx.isPending))
+    .filter(([,tx]) => tx && !tx.isDeleted && (!filterPendingOnly || tx.isPending) && (!selectedDate || tx.date===selectedDate) && (!searchTerm || (String(tx.item||"")+" "+String(tx.category||"")).toLowerCase().includes(searchTerm.toLowerCase())))
     .map(([id,tx]) => ({id,...tx}))
     .sort((a,b) => String(a.date||"").localeCompare(String(b.date||"")) || (a.createdAt||0)-(b.createdAt||0));
   if (!items.length) {
@@ -121,7 +128,7 @@ function renderChat() {
     }
     const isBenson = tx.payer === "Benson";
     const row = element("div","msg-row " + (isBenson ? "left" : "right"));
-    const avatar = element("div","msg-avatar", isBenson ? "Ben" : "佩筠");
+    const avatar = element("div","msg-avatar", isBenson ? "💙" : "💜");
     const img = document.createElement("img");
     img.src = isBenson ? "benson.png" : "peiyun.jpg"; img.alt = tx.payer;
     img.addEventListener("error",()=>img.remove()); avatar.replaceChildren(img);
@@ -144,6 +151,24 @@ function renderChat() {
   }
   stream.scrollTop = stream.scrollHeight;
 }
+
+window.toggleBalanceDetails=()=>{const el=$("balanceDetails");el.hidden=!el.hidden;document.querySelector(".balance-toggle").setAttribute("aria-expanded",String(!el.hidden));};
+window.setSearch=(value)=>{searchTerm=value.trim();renderChat();};
+window.toggleCalendar=()=>{const el=$("calendarPanel");el.hidden=!el.hidden;if(!el.hidden)renderCalendar();};
+window.changeCalendarMonth=(delta)=>{calendarDate.setMonth(calendarDate.getMonth()+delta);renderCalendar();};
+window.clearDateFilter=()=>{selectedDate="";renderCalendar();renderChat();};
+function renderCalendar(){
+ const y=calendarDate.getFullYear(),m=calendarDate.getMonth(),first=new Date(y,m,1),days=new Date(y,m+1,0).getDate();
+ $("calendarTitle").textContent=`${y}年 ${m+1}月`;
+ const grid=$("calendarGrid");grid.replaceChildren();
+ ["日","一","二","三","四","五","六"].forEach(d=>grid.append(element("span","calendar-weekday",d)));
+ const offset=first.getDay();for(let i=0;i<offset;i++)grid.append(element("span","calendar-empty",""));
+ const dates=new Set(Object.values(transactions).filter(t=>t&&!t.isDeleted).map(t=>t.date));
+ for(let day=1;day<=days;day++){const key=`${y}-${String(m+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;const b=element("button","calendar-day"+(selectedDate===key?" selected":""),String(day));b.type="button";if(dates.has(key))b.classList.add("has-record");b.addEventListener("click",()=>{selectedDate=selectedDate===key?"":key;renderCalendar();renderChat();});grid.append(b);}
+}
+window.openCalculator=()=>{$("calculatorModal").classList.add("open");};
+window.calcPress=(key)=>{if(key==="C")calcExpression="";else if(key==="="){try{const safe=calcExpression.replace(/×/g,"*").replace(/÷/g,"/").replace(/−/g,"-");if(!/^[0-9+*/.() -]+$/.test(safe))throw Error();calcExpression=String(Function('"use strict";return ('+safe+')')());}catch{calcExpression="錯誤";}}else calcExpression+=key;$("calcDisplay").value=calcExpression||"0";};
+
 window.togglePendingFilter = () => {
   filterPendingOnly=!filterPendingOnly; $("pendingFilterBtn").classList.toggle("active",filterPendingOnly); renderChat();
 };
