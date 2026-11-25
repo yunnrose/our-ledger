@@ -700,3 +700,15 @@ body{display:flex;justify-content:center;align-items:stretch;background:#f8f5f1;
 .calendar-record-value{white-space:nowrap;color:#536e83}.calendar-record-value.pending-txt{color:#c48a32}
 .calendar-no-records{font-size:.84rem;color:#98a5b1;padding:8px 0}
 @media(max-width:380px){.calendar-day-summary{gap:5px}.calendar-summary-item{padding:9px 6px}.calendar-summary-item strong{font-size:.78rem}}
+
+
+/* Calendar pending amount quick action */
+.calendar-summary-item{border:0;text-align:left;font:inherit;cursor:default}
+button.calendar-summary-item.pending-summary{cursor:pointer;transition:transform .15s,box-shadow .15s}
+button.calendar-summary-item.pending-summary:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 3px 12px rgba(197,145,63,.16)}
+button.calendar-summary-item.pending-summary:disabled{opacity:.72}
+.calendar-pending-picker{max-width:420px}
+.calendar-pending-hint{font-size:.84rem;color:#8796a3;margin:0 0 10px}
+.calendar-pending-choice{display:flex;flex-direction:column;gap:5px;width:100%;padding:13px 14px;margin:7px 0;border:1px solid #f1dfbd;border-radius:13px;background:#fffaf1;text-align:left;cursor:pointer}
+.calendar-pending-choice strong{font-size:.92rem;color:#6e5b42}
+.calendar-pending-choice span{font-size:.78rem;color:#9a896f}
