@@ -1,6 +1,8 @@
 name: Deploy Our Ledger to GitHub Pages
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
   workflow_dispatch:
@@ -15,7 +17,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test-and-build:
+  test:
+    name: Test ledger logic
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -29,6 +32,18 @@ jobs:
       - name: Run ledger domain tests
         run: node --test tests/ledger-core.test.js
 
+  deploy:
+    name: Deploy GitHub Pages
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    needs: test
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Prepare Firebase web config
         env:
           FIREBASE_CONFIG_JS: ${{ secrets.FIREBASE_CONFIG_JS }}
@@ -37,7 +52,7 @@ jobs:
             echo "Missing repository secret FIREBASE_CONFIG_JS."
             exit 1
           fi
-          printf '%s\n' "$FIREBASE_CONFIG_JS" > js/firebase-config.js
+          printf '%s\\n' "$FIREBASE_CONFIG_JS" > js/firebase-config.js
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
@@ -47,13 +62,6 @@ jobs:
         with:
           path: .
 
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: test-and-build
-    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
