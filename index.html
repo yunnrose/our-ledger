@@ -8,7 +8,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <!-- 加上 ?v=2 強制瀏覽器讀取最新 CSS -->
+    <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 
@@ -60,11 +61,10 @@
 
     <!-- 底部聊天輸入列（快速記一筆） -->
     <footer class="chat-composer">
-        <!-- 第一排：誰付錢 & 分帳模式切換 -->
         <div class="composer-chips">
             <div class="chip-group">
                 <button type="button" class="chip active" data-payer="Benson" onclick="setQuickPayer('Benson')">💙 Benson 付</button>
-                <button type="button" class="chip" data-payer="佩筠" onclick="setQuickPayer('佩筠')">🩷 佩筠 付</button>
+                <button type="button" class="chip" data-payer="佩筠" onclick="setQuickPayer('佩筠')">💜 佩筠 付</button>
             </div>
             <div class="chip-group">
                 <button type="button" class="chip active" data-split="split" onclick="setQuickSplit('split')">平分</button>
@@ -73,7 +73,6 @@
             </div>
         </div>
 
-        <!-- 第二排：輸入項目、金額與送出按鈕 -->
         <form class="composer-input-row" onsubmit="sendQuickTx(event)">
             <select id="quickCategory" class="cat-select" title="分類">
                 <option value="餐飲">🍽️</option>
@@ -115,7 +114,7 @@
                 <label class="form-label">誰先付錢？</label>
                 <div class="radio-group" id="editPayerGroup">
                     <div class="radio-btn" data-val="Benson" onclick="selectRadio('editPayerGroup', 'Benson')">💙 Benson 付</div>
-                    <div class="radio-btn" data-val="佩筠" onclick="selectRadio('editPayerGroup', '佩筠')">🩷 佩筠 付</div>
+                    <div class="radio-btn" data-val="佩筠" onclick="selectRadio('editPayerGroup', '佩筠')">💜 佩筠 付</div>
                 </div>
             </div>
             <div class="form-group">
@@ -181,6 +180,6 @@
     </div>
 </div>
 
-<script type="module" src="app.js"></script>
+<script type="module" src="app.js?v=2"></script>
 </body>
 </html>
