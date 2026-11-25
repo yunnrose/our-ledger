@@ -46,7 +46,7 @@ export function calculateLedger(transactions = {}, now = new Date()) {
 
   for (const tx of Object.values(transactions || {})) {
     if (!tx || typeof tx !== "object" || tx.isDeleted === true) continue;
-    if (tx.isPending) {
+    if (tx.isPending === true || tx.amount === null || tx.amount === undefined || tx.amount === "") {
       result.pendingCount += 1;
       continue;
     }
@@ -130,15 +130,17 @@ export function parseNaturalLanguage(input, operator, now = new Date()) {
     return {ok:true,transaction:{type:"settlement",item:"還款",amount,payer,receiver,date,isPending:false,createdAt:Date.now(),sourceText:raw}};
   }
 
-  const pending = /待補|金額未定|還沒確認金額/.test(text);
+  const pendingMarker = /待補|金額未定|還沒確認金額/.test(text);
   const splitType = /全算對方的|對方全額負擔|對方負擔全部|對方付全額/.test(text) ? "advance" : "split";
   const payerMatch = text.match(/(Benson|佩筠)\s*(?:付|付款|先付)/i);
   // Missing payer defaults to the currently selected operator identity.
   const payer = /我付|我付款|我先付/.test(text) ? operator : payerMatch ? payerMatch[1] : operator;
   const amountMatch = text.match(/(?:NT\$?\s*)?([0-9][0-9,]*(?:\.\d+)?)\s*(?:元|塊)?/);
-  const amount = pending ? 0 : amountMatch ? Math.round(Number(amountMatch[1].replace(/,/g,""))) : null;
-  if(!pending && (amount===null||!Number.isSafeInteger(amount)||amount<=0))
-    return {ok:false,error:"尚未辨識到有效金額，請補上金額或標記「待補」"};
+  const parsedAmount = amountMatch ? Math.round(Number(amountMatch[1].replace(/,/g,""))) : null;
+  const pending = pendingMarker || parsedAmount === null;
+  const amount = pending ? 0 : parsedAmount;
+  if(!pending && (!Number.isSafeInteger(amount)||amount<=0))
+    return {ok:false,error:"金額必須是大於 0 的正整數"};
 
   let item=text
     .replace(/Benson|佩筠/g,"")
