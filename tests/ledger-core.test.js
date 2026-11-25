@@ -118,3 +118,13 @@ test("資料庫金額為空白或缺漏時視為待補且不納入結算", () =>
   assert.equal(r.totalExpense,0);
   assert.equal(r.netBalance,0);
 });
+
+
+test("自然語言辨識完整日期，支援月曆選日補登", () => {
+  const r = parseNaturalLanguage("2026-11-20 晚餐 850 Benson付", "佩筠", new Date("2026-11-25T04:00:00Z"));
+  assert.equal(r.ok, true);
+  assert.equal(r.transaction.item, "晚餐");
+  assert.equal(r.transaction.amount, 850);
+  assert.equal(r.transaction.payer, "Benson");
+  assert.equal(r.transaction.date, "2026-11-20");
+});
