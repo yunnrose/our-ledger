@@ -104,7 +104,7 @@ function renderChat() {
   const stream = $("chatStream");
   stream.replaceChildren();
   const items = Object.entries(transactions)
-    .filter(([,tx]) => tx && !tx.isDeleted && (!filterPendingOnly || tx.isPending) && (!selectedDate || tx.date===selectedDate) && (!searchTerm || (String(tx.item||"")+" "+String(tx.category||"")).toLowerCase().includes(searchTerm.toLowerCase())))
+    .filter(([,tx]) => tx && !tx.isDeleted && (!filterPendingOnly || tx.isPending === true || tx.amount === null || tx.amount === undefined || tx.amount === "") && (!selectedDate || tx.date===selectedDate) && (!searchTerm || (String(tx.item||"")+" "+String(tx.category||"")).toLowerCase().includes(searchTerm.toLowerCase())))
     .map(([id,tx]) => ({id,...tx}))
     .sort((a,b) => String(a.date||"").localeCompare(String(b.date||"")) || (a.createdAt||0)-(b.createdAt||0));
   if (!items.length) {
@@ -134,10 +134,10 @@ function renderChat() {
     img.addEventListener("error",()=>img.remove()); avatar.replaceChildren(img);
     const content = element("div","msg-content");
     content.append(element("div","msg-sender-name", tx.payer + " 付款"));
-    const bubble = element("div","bubble" + (tx.isPending ? " pending" : ""));
+    const isPending = tx.isPending === true || tx.amount === null || tx.amount === undefined || tx.amount === "";\n    const bubble = element("div","bubble" + (isPending ? " pending" : ""));
     const top = element("div","bubble-top");
     top.append(element("span","bubble-item",tx.item || "未命名項目"));
-    top.append(element("span","bubble-amount"+(tx.isPending?" pending-txt":""),tx.isPending?"⏳ 待補":money(tx.amount)));
+    top.append(element("span","bubble-amount"+(isPending?" pending-txt":""),isPending?"⏳ 待補":money(tx.amount)));
     bubble.append(top);
     const tags = element("div","bubble-tags");
     tags.append(element("span","b-tag "+(tx.splitType==="split"?"split":"advance"),tx.splitType==="split"?"兩人平分":(isBenson?"佩筠":"Benson")+"負擔"));
@@ -145,7 +145,7 @@ function renderChat() {
     const footer = element("div","bubble-footer");
     footer.append(element("span","",tx.shortTime || ""));
     const actions = element("div","bubble-btns");
-    const edit = element("button","b-btn",tx.isPending?"補金額":"修改"); edit.type="button"; edit.addEventListener("click",()=>openEditModal(tx.id));
+    const edit = element("button","b-btn",isPending?"補金額":"修改"); edit.type="button"; edit.addEventListener("click",()=>openEditModal(tx.id));
     const del = element("button","b-btn del","撤銷"); del.type="button"; del.addEventListener("click",()=>deleteTx(tx.id));
     actions.append(edit,del); footer.append(actions); bubble.append(footer); content.append(bubble); row.append(avatar,content); stream.append(row);
   }
