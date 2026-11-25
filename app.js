@@ -157,7 +157,8 @@ function renderChat() {
       head.append(element("strong","ledger-amount",money(tx.amount)));
       card.append(head,element("div","ledger-meta",(tx.date||"")+" · 還款紀錄"));
       const actions=element("div","ledger-actions");
-      const del=element("button","ledger-action danger","撤銷");del.type="button";del.addEventListener("click",()=>deleteTx(tx.id));actions.append(del);card.append(actions);stream.append(card);continue;
+      const edit=element("button","ledger-action","修改");edit.type="button";edit.addEventListener("click",()=>openEditSettlementModal(tx.id));
+      const del=element("button","ledger-action danger","撤銷");del.type="button";del.addEventListener("click",()=>deleteTx(tx.id));actions.append(edit,del);card.append(actions);stream.append(card);continue;
     }
     const pending=tx.isPending===true||tx.amount===null||tx.amount===undefined||tx.amount==="";
     const card=element("article","ledger-card"+(pending?" pending-card":""));
