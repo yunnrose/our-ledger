@@ -3,110 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>記帳本｜佩筠 × Benson 共同記帳</title>
+    <title>佩筠 × Benson 的記帳聊天室 💬</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- 引入獨立的 CSS 樣式表 -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="app-container">
-    <!-- 頂部標題 -->
-    <header class="header">
-        <h1>📒 佩筠 × Benson 的小帳本</h1>
-        <div id="syncStatus" class="sync-badge">
-            <span class="sync-dot"></span> <span>連線中…</span>
+<div class="chat-app">
+    <!-- 頂部固定導覽與結算膠囊 -->
+    <header class="chat-header">
+        <div class="header-top">
+            <div class="room-title">
+                <div class="room-avatars">
+                    <img src="benson.png" alt="Benson" onerror="this.style.display='none'">
+                    <img src="peiyun.jpg" alt="佩筠" onerror="this.style.display='none'">
+                </div>
+                <div>
+                    <h1>佩筠 × Benson 💕</h1>
+                    <div id="syncStatus" class="sync-text">連線中…</div>
+                </div>
+            </div>
+            <!-- 切換目前是誰在傳訊息 -->
+            <div class="sender-switch">
+                <button class="sender-btn active" data-user="Benson" onclick="setOperator('Benson')">我是 Benson</button>
+                <button class="sender-btn" data-user="佩筠" onclick="setOperator('佩筠')">我是 佩筠</button>
+            </div>
+        </div>
+
+        <!-- 置頂結算橫幅 -->
+        <div class="balance-banner">
+            <div class="balance-info">
+                <span id="settlementText">計算中...</span>
+                <strong id="settlementAmount">NT$ 0</strong>
+            </div>
+            <div class="banner-actions">
+                <button class="mini-btn pending-filter" id="pendingFilterBtn" onclick="togglePendingFilter()">
+                    待補 <span id="pendingCount">0</span>
+                </button>
+                <button class="mini-btn log-btn" onclick="openLogsModal()" title="修改紀錄">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </button>
+                <button class="mini-btn settle-btn" onclick="openSettleModal()">
+                    💸 還款
+                </button>
+            </div>
         </div>
     </header>
 
-    <!-- 結算總覽卡片 -->
-    <section class="summary-card">
-        <div id="settlementText" class="summary-label">計算中...</div>
-        <div id="settlementAmount" class="summary-amount">NT$ 0</div>
-        <div class="summary-actions">
-            <button class="btn btn-primary" onclick="openTxModal()">
-                <i class="fa-solid fa-plus"></i> 記一筆
-            </button>
-            <button class="btn btn-settle" onclick="openSettleModal()">
-                <i class="fa-solid fa-handshake"></i> 還款結清
-            </button>
-        </div>
-    </section>
-
-    <!-- 目前操作者切換 -->
-    <div class="user-switcher">
-        <span><i class="fa-solid fa-user-pen"></i> 目前操作人：</span>
-        <div class="user-pills">
-            <button class="user-pill active" data-user="Benson" onclick="setOperator('Benson')">Benson</button>
-            <button class="user-pill" data-user="佩筠" onclick="setOperator('佩筠')">佩筠</button>
-        </div>
-    </div>
-
-    <!-- 分類檢視分頁 -->
-    <div class="tabs">
-        <button class="tab active" data-tab="all" onclick="switchTab('all')">全部明細</button>
-        <button class="tab" data-tab="pending" onclick="switchTab('pending')">
-            待補金額 <span id="pendingCount" class="badge-count" style="display:none;">0</span>
-        </button>
-        <button class="tab" data-tab="logs" onclick="switchTab('logs')">修改紀錄</button>
-    </div>
-
-    <!-- 列表呈現區 -->
-    <main id="contentList" class="tx-list">
-        <div class="empty-state">正在從雲端載入帳本資料...</div>
+    <!-- 中間聊天氣泡滾動區 -->
+    <main id="chatStream" class="chat-stream">
+        <div class="empty-chat">正在載入你們的記帳對話... 🐻🐰</div>
     </main>
+
+    <!-- 底部聊天輸入列（快速記一筆） -->
+    <footer class="chat-composer">
+        <!-- 第一排：誰付錢 & 分帳模式切換 -->
+        <div class="composer-chips">
+            <div class="chip-group">
+                <button type="button" class="chip active" data-payer="Benson" onclick="setQuickPayer('Benson')">💙 Benson 付</button>
+                <button type="button" class="chip" data-payer="佩筠" onclick="setQuickPayer('佩筠')">🩷 佩筠 付</button>
+            </div>
+            <div class="chip-group">
+                <button type="button" class="chip active" data-split="split" onclick="setQuickSplit('split')">平分</button>
+                <button type="button" class="chip" data-split="advance" onclick="setQuickSplit('advance')">對方負擔</button>
+                <button type="button" class="chip pending-chip" id="quickPendingChip" onclick="toggleQuickPending()">待補</button>
+            </div>
+        </div>
+
+        <!-- 第二排：輸入項目、金額與送出按鈕 -->
+        <form class="composer-input-row" onsubmit="sendQuickTx(event)">
+            <select id="quickCategory" class="cat-select" title="分類">
+                <option value="餐飲">🍽️</option>
+                <option value="日用品">🛒</option>
+                <option value="娛樂">🎬</option>
+                <option value="交通">🚗</option>
+                <option value="其他">📦</option>
+            </select>
+            <input type="text" id="quickItem" class="chat-input item-input" placeholder="買了什麼？(如:晚餐)" required>
+            <input type="number" id="quickAmount" class="chat-input amt-input" step="0.5" min="0" placeholder="$ 金額">
+            <button type="submit" class="send-btn" title="傳送記帳">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </form>
+    </footer>
 </div>
 
-<!-- 新增 / 編輯帳目 Modal -->
-<div id="txModal" class="modal-backdrop">
+<!-- 修改 / 補金額 彈窗 -->
+<div id="editModal" class="modal-backdrop">
     <div class="modal">
         <div class="modal-header">
-            <h3 id="modalTitle" class="modal-title">新增一筆消費</h3>
+            <h3 id="editModalTitle" class="modal-title">修改這筆對話</h3>
             <button class="close-btn" onclick="closeModals()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <form id="txForm" onsubmit="saveTransaction(event)">
+        <form onsubmit="saveEditedTx(event)">
             <input type="hidden" id="editTxId">
-            
             <div class="form-group">
                 <label class="form-label">項目名稱</label>
-                <input type="text" id="txItem" class="form-input" placeholder="例如：晚餐拉麵、Costco、早餐" required>
+                <input type="text" id="editItem" class="form-input" required>
             </div>
-
             <div class="form-group">
                 <label class="form-label">金額 (NT$)</label>
-                <input type="number" id="txAmount" class="form-input" step="0.5" min="0" placeholder="輸入金額">
+                <input type="number" id="editAmount" class="form-input" step="0.5" min="0">
                 <label class="checkbox-row">
-                    <input type="checkbox" id="txPending" onchange="togglePendingInput()"> 金額待補（先記項目，之後再補金額）
+                    <input type="checkbox" id="editPending" onchange="toggleEditPending()"> 金額待補
                 </label>
             </div>
-
             <div class="form-group">
                 <label class="form-label">誰先付錢？</label>
-                <div class="radio-group" id="payerGroup">
-                    <div class="radio-btn selected" data-val="Benson" onclick="selectRadio('payerGroup', 'Benson')">Benson 付</div>
-                    <div class="radio-btn" data-val="佩筠" onclick="selectRadio('payerGroup', '佩筠')">佩筠 付</div>
+                <div class="radio-group" id="editPayerGroup">
+                    <div class="radio-btn" data-val="Benson" onclick="selectRadio('editPayerGroup', 'Benson')">💙 Benson 付</div>
+                    <div class="radio-btn" data-val="佩筠" onclick="selectRadio('editPayerGroup', '佩筠')">🩷 佩筠 付</div>
                 </div>
             </div>
-
             <div class="form-group">
                 <label class="form-label">分帳方式</label>
-                <div class="radio-group" id="splitGroup">
-                    <div class="radio-btn selected" data-val="split" onclick="selectRadio('splitGroup', 'split')">兩人平分 (50/50)</div>
-                    <div class="radio-btn" data-val="advance" onclick="selectRadio('splitGroup', 'advance')">對方全額負擔 (代墊)</div>
+                <div class="radio-group" id="editSplitGroup">
+                    <div class="radio-btn" data-val="split" onclick="selectRadio('editSplitGroup', 'split')">兩人平分</div>
+                    <div class="radio-btn" data-val="advance" onclick="selectRadio('editSplitGroup', 'advance')">對方全額負擔</div>
                 </div>
             </div>
-
             <div class="grid-2">
                 <div class="form-group">
-                    <label class="form-label">消費日期</label>
-                    <input type="date" id="txDate" class="form-input" required>
+                    <label class="form-label">日期</label>
+                    <input type="date" id="editDate" class="form-input" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">分類標籤</label>
-                    <select id="txCategory" class="form-select">
+                    <label class="form-label">分類</label>
+                    <select id="editCategory" class="form-select">
                         <option value="餐飲">🍽️ 餐飲</option>
                         <option value="日用品">🛒 日用品</option>
                         <option value="娛樂">🎬 娛樂</option>
@@ -115,22 +141,21 @@
                     </select>
                 </div>
             </div>
-
-            <button type="submit" class="btn btn-primary btn-full">儲存帳目</button>
+            <button type="submit" class="btn-submit">儲存修改</button>
         </form>
     </div>
 </div>
 
-<!-- 還款 Modal -->
+<!-- 還款彈窗 -->
 <div id="settleModal" class="modal-backdrop">
     <div class="modal">
         <div class="modal-header">
-            <h3 class="modal-title">記錄一筆還款</h3>
+            <h3 class="modal-title">💸 記錄一筆還款</h3>
             <button class="close-btn" onclick="closeModals()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <form onsubmit="saveSettlement(event)">
             <div class="form-group">
-                <label class="form-label">還款方向</label>
+                <label class="form-label">誰還錢給誰？</label>
                 <div class="radio-group" id="settleDirGroup">
                     <div class="radio-btn selected" data-val="佩筠->Benson" onclick="selectRadio('settleDirGroup', '佩筠->Benson')">佩筠 還給 Benson</div>
                     <div class="radio-btn" data-val="Benson->佩筠" onclick="selectRadio('settleDirGroup', 'Benson->佩筠')">Benson 還給 佩筠</div>
@@ -140,12 +165,22 @@
                 <label class="form-label">還款金額 (NT$)</label>
                 <input type="number" id="settleAmount" class="form-input" step="0.5" min="1" required>
             </div>
-            <button type="submit" class="btn btn-primary btn-full btn-success">確認還款並入帳</button>
+            <button type="submit" class="btn-submit btn-green">送出還款訊息</button>
         </form>
     </div>
 </div>
 
-<!-- 引入獨立的 JavaScript 程式邏輯 -->
+<!-- 修改歷史紀錄彈窗 -->
+<div id="logsModal" class="modal-backdrop">
+    <div class="modal" style="max-height: 75vh; display: flex; flex-direction: column;">
+        <div class="modal-header">
+            <h3 class="modal-title">📜 帳本修改歷史</h3>
+            <button class="close-btn" onclick="closeModals()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="logsList" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px;"></div>
+    </div>
+</div>
+
 <script type="module" src="app.js"></script>
 </body>
 </html>
