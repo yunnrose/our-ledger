@@ -72,7 +72,7 @@ function addLog(message) {
 
 // 計算誰欠誰多少錢
 function calculateBalance() {
-    let peijunOwesBenson = 0;
+    let peiyunOwesBenson = 0;
     let pendingCount = 0;
 
     Object.values(transactions).forEach(tx => {
@@ -82,19 +82,19 @@ function calculateBalance() {
         }
         const amt = parseFloat(tx.amount) || 0;
         if (tx.type === 'settlement') {
-            if (tx.payer === '佩筠') peijunOwesBenson -= amt;
-            if (tx.payer === 'Benson') peijunOwesBenson += amt;
+            if (tx.payer === '佩筠') peiyunOwesBenson -= amt;
+            if (tx.payer === 'Benson') peiyunOwesBenson += amt;
         } else {
             const share = tx.splitType === 'split' ? amt / 2 : amt;
             if (tx.payer === 'Benson') {
-                peijunOwesBenson += share;
+                peiyunOwesBenson += share;
             } else if (tx.payer === '佩筠') {
-                peijunOwesBenson -= share;
+                peiyunOwesBenson -= share;
             }
         }
     });
 
-    currentNetBalance = peijunOwesBenson;
+    currentNetBalance = peiyunOwesBenson;
 
     // 更新待補數量標籤
     const badge = document.getElementById('pendingCount');
@@ -105,15 +105,15 @@ function calculateBalance() {
     const labelEl = document.getElementById('settlementText');
     const amountEl = document.getElementById('settlementAmount');
 
-    if (Math.abs(peijunOwesBenson) < 0.1) {
+    if (Math.abs(peiyunOwesBenson) < 0.1) {
         labelEl.innerHTML = '🎉 目前雙方帳目已完全結清！';
         amountEl.textContent = 'NT$ 0';
-    } else if (peijunOwesBenson > 0) {
-        labelEl.innerHTML = '<strong class="peijun">佩筠</strong> 要給 <strong class="benson">Benson</strong>';
-        amountEl.textContent = `NT$ ${peijunOwesBenson.toLocaleString()}`;
+    } else if (peiyunOwesBenson > 0) {
+        labelEl.innerHTML = '<strong class="peiyun">佩筠</strong> 要給 <strong class="benson">Benson</strong>';
+        amountEl.textContent = `NT$ ${peiyunOwesBenson.toLocaleString()}`;
     } else {
-        labelEl.innerHTML = '<strong class="benson">Benson</strong> 要給 <strong class="peijun">佩筠</strong>';
-        amountEl.textContent = `NT$ ${Math.abs(peijunOwesBenson).toLocaleString()}`;
+        labelEl.innerHTML = '<strong class="benson">Benson</strong> 要給 <strong class="peiyun">佩筠</strong>';
+        amountEl.textContent = `NT$ ${Math.abs(peiyunOwesBenson).toLocaleString()}`;
     }
 }
 
@@ -167,8 +167,9 @@ function renderList() {
     items.forEach(tx => {
         const card = document.createElement('div');
         const isBenson = tx.payer === 'Benson';
-        const avatarClass = isBenson ? 'benson' : 'peijun';
-        const avatarText = isBenson ? 'Ben' : '佩筠';
+        const avatarClass = isBenson ? 'benson' : 'peiyun';
+        const avatarImg = isBenson ? 'benson.png' : 'peiyun.jpg';
+        const avatarHtml = `<img src="${avatarImg}" alt="${tx.payer}">`;
 
         if (tx.type === 'settlement') {
             card.className = 'tx-card settlement';
@@ -199,7 +200,7 @@ function renderList() {
             card.innerHTML = `
                 <div class="tx-top">
                     <div class="tx-left">
-                        <div class="avatar ${avatarClass}">${avatarText}</div>
+                        <div class="avatar ${avatarClass}">${avatarHtml}</div>
                         <div>
                             <div class="tx-title">${tx.item}</div>
                             <div class="tx-meta">
