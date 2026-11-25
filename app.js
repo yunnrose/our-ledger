@@ -40,7 +40,7 @@ function startSharedRoom() {
     renderSummary();
     renderChat();
     if (!$("calendarPanel").hidden) renderCalendar();
-    if ($("calendarDayModal")?.classList.contains("open")) renderCalendarDayModal(selectedCalendarDate);
+    if (selectedCalendarDate && !$("calendarDayModal").hidden) renderCalendarDayModal(selectedCalendarDate);
   }, () => $("syncStatus").textContent = "資料讀取失敗");
   stopLogs = onValue(logsRef, (snapshot) => {
     logs = Object.values(snapshot.val() || {}).sort((a,b) => (b.timestamp||0)-(a.timestamp||0));
@@ -231,7 +231,7 @@ function renderCalendar(){
      if(marks.pending)dots.append(element("i","calendar-dot pending-dot"));
      b.append(dots);
    }
-   b.addEventListener("click",()=>{selectedDate=key;selectedCalendarDate=key;renderCalendar();renderChat();openCalendarDayModal(key);});
+   b.addEventListener("click",()=>{selectedDate=key;selectedCalendarDate=key;renderCalendar();renderChat();renderCalendarDayModal(key);$("calendarDayModal").hidden=false;});
    grid.append(b);
  }
 }
@@ -269,7 +269,7 @@ window.openCalendarPendingItems=(date)=>{
  const pending=Object.entries(transactions).filter(([,tx])=>tx&&!tx.isDeleted&&tx.date===date&&tx.type!=="settlement"&&(tx.isPending===true||tx.amount===null||tx.amount===undefined||tx.amount==="")).map(([id,tx])=>({id,...tx}));
  if(!pending.length)return;
  // 收起月曆及當日視窗，讓補金額視窗成為主要操作焦點。
- $("calendarDayModal").classList.remove("open");
+ $("calendarDayModal").hidden=true;
  $("calendarPanel").hidden=true;
  if(pending.length===1){window.openEditModal(pending[0].id);return;}
  const list=$("calendarPendingPickerList");list.replaceChildren();
@@ -284,10 +284,9 @@ window.openCalendarPendingItems=(date)=>{
  });
  $("calendarPendingPickerModal").classList.add("open");
 };
-window.openCalendarDayModal=(date)=>{selectedCalendarDate=date||selectedCalendarDate;renderCalendarDayModal(selectedCalendarDate);$("calendarDayModal").classList.add("open");};
+window.openCalendarDayModal=(date)=>{selectedCalendarDate=date||selectedCalendarDate;renderCalendarDayModal(selectedCalendarDate);$("calendarDayModal").hidden=false;};
 window.openCalendarExpenseModal=()=>{
  if(!selectedCalendarDate)return;
- $("calendarDayModal").classList.remove("open");
  $("calendarExpenseDate").value=selectedCalendarDate;
  $("calendarExpenseInput").value="";
  $("calendarExpenseModal").classList.add("open");
@@ -309,12 +308,11 @@ window.saveCalendarExpense=async(event)=>{
    await push(txRef,tx);
    await audit("create","月曆新增支出："+tx.item+(tx.isPending?"（待補）":" "+money(tx.amount))+"（"+tx.payer+" 付款）",null,tx);
    $("calendarExpenseModal").classList.remove("open");
-   selectedCalendarDate=date;selectedDate=date;renderCalendar();renderChat();openCalendarDayModal(date);
+   selectedCalendarDate=date;selectedDate=date;renderCalendar();renderChat();renderCalendarDayModal(date);$("calendarDayModal").hidden=false;
  }catch(error){alert("新增支出失敗，請確認網路連線及 Firebase 權限。");}
 };
 window.openCalendarRepaymentModal=()=>{
  if(!selectedCalendarDate)return;
- $("calendarDayModal").classList.remove("open");
  window.openSettleModal();
  if($("settleModal").classList.contains("open"))$("settleDate").value=selectedCalendarDate;
 };
