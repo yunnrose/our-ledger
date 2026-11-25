@@ -49,7 +49,7 @@
       </div>
       <div class="banner-actions">
         <button type="button" class="mini-btn settle-btn" onclick="openSettleModal()"><i class="fa-solid fa-hand-holding-dollar"></i> 記一筆還款</button>
-        <button type="button" class="mini-btn pending-filter" id="pendingFilterBtn" onclick="togglePendingFilter()"><i class="fa-solid fa-wallet"></i> <span id="pendingCount">0</span> 筆待補</button>
+        <button type="button" class="mini-btn pending-filter" id="pendingFilterBtn" onclick="openPendingModal()"><i class="fa-solid fa-wallet"></i> <span id="pendingCount">0</span> 筆待補</button>
       </div>
     </div>
     <section id="balanceDetails" class="balance-details" hidden>
@@ -95,15 +95,15 @@
   </footer>
 </div>
 
-<!-- 月曆待補項目選擇 -->
-<div id="calendarPendingPickerModal" class="modal-backdrop">
-  <div class="modal calendar-pending-picker">
+<!-- 全部待補金額清單 -->
+<div id="pendingModal" class="modal-backdrop">
+  <div class="modal pending-list-modal">
     <div class="modal-header">
-      <h3 class="modal-title">📝 選擇要補金額的項目</h3>
-      <button class="close-btn" onclick="closeModals()"><i class="fa-solid fa-xmark"></i></button>
+      <h3 class="modal-title">📝 待補金額</h3>
+      <button type="button" class="close-btn" onclick="closeModals()"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <p class="calendar-pending-hint">選擇一筆紀錄，輸入實際金額即可完成補登。</p>
-    <div id="calendarPendingPickerList"></div>
+    <p class="calendar-pending-hint">點選一筆紀錄，即可補上實際金額。</p>
+    <div id="pendingList"></div>
   </div>
 </div>
 
