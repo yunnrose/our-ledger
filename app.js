@@ -245,7 +245,14 @@ function renderCalendarDayModal(date){
  $("calendarDayTitle").textContent=new Intl.DateTimeFormat("zh-TW",{timeZone:"Asia/Taipei",year:"numeric",month:"long",day:"numeric",weekday:"short"}).format(d);
  const summary=$("calendarDaySummary");summary.replaceChildren();
  [["支出總額",money(expenseTotal),"expense-summary"],["還款總額",money(repaymentTotal),"repayment-summary"],["待補筆數",pendingCount+" 筆","pending-summary"]].forEach(([label,value,cls])=>{
-   const item=element("div","calendar-summary-item "+cls);item.append(element("span","",label),element("strong","",value));summary.append(item);
+   const item=element("button","calendar-summary-item "+cls,label+" "+value);
+   item.type="button";
+   if(cls==="pending-summary"){
+     item.disabled=pendingCount===0;
+     item.title=pendingCount?"點擊補上待補金額":"目前沒有待補項目";
+     item.addEventListener("click",()=>openCalendarPendingItems(date));
+   }
+   summary.append(item);
  });
  const list=$("calendarDayRecords");list.replaceChildren();
  if(!records.length){list.append(element("p","calendar-no-records","這一天還沒有帳務紀錄。"));return;}
@@ -258,6 +265,25 @@ function renderCalendarDayModal(date){
    list.append(row);
  });
 }
+window.openCalendarPendingItems=(date)=>{
+ const pending=Object.entries(transactions).filter(([,tx])=>tx&&!tx.isDeleted&&tx.date===date&&tx.type!=="settlement"&&(tx.isPending===true||tx.amount===null||tx.amount===undefined||tx.amount==="")).map(([id,tx])=>({id,...tx}));
+ if(!pending.length)return;
+ // 收起月曆及當日視窗，讓補金額視窗成為主要操作焦點。
+ $("calendarDayModal").classList.remove("open");
+ $("calendarPanel").hidden=true;
+ if(pending.length===1){window.openEditModal(pending[0].id);return;}
+ const list=$("calendarPendingPickerList");list.replaceChildren();
+ pending.forEach(tx=>{
+   const button=element("button","calendar-pending-choice");
+   button.type="button";
+   const title=element("strong","",tx.item||"未命名項目");
+   const meta=element("span","",((tx.payer||"未指定付款人")+" 付款 · "+(tx.date||date)));
+   button.append(title,meta);
+   button.addEventListener("click",()=>{$("calendarPendingPickerModal").classList.remove("open");window.openEditModal(tx.id);});
+   list.append(button);
+ });
+ $("calendarPendingPickerModal").classList.add("open");
+};
 window.openCalendarDayModal=(date)=>{selectedCalendarDate=date||selectedCalendarDate;renderCalendarDayModal(selectedCalendarDate);$("calendarDayModal").classList.add("open");};
 window.openCalendarExpenseModal=()=>{
  if(!selectedCalendarDate)return;
@@ -325,8 +351,9 @@ window.openEditModal = (id) => {
   const tx=transactions[id]; if(!tx || tx.isDeleted) return;
   $("editTxId").value=id;$("editModalTitle").textContent=tx.isPending?"💰 補上消費金額":"✏️ 修改這筆消費";
   const pending = tx.isPending === true || tx.amount === null || tx.amount === undefined || tx.amount === "";
-  $("editItem").value=tx.item||"";$("editAmount").value=pending?"":tx.amount;$("editPending").checked=pending;
-  $("editAmount").disabled=pending;$("editDate").value=tx.date||taiwanDateString();
+  $("editItem").value=tx.item||"";$("editAmount").value=pending?"":tx.amount;
+  // 從待補清單進入時，直接提供可輸入的金額欄位。
+  $("editPending").checked=false;$("editAmount").disabled=false;$("editDate").value=tx.date||taiwanDateString();
 window.selectRadio("editPayerGroup",tx.payer);window.selectRadio("editSplitGroup",tx.splitType||"split");
   $("editModal").classList.add("open");
 };
