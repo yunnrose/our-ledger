@@ -130,7 +130,7 @@ export function parseNaturalLanguage(input, operator, now = new Date()) {
   let item = text
     .replace(/Benson|佩筠/g, "")
     .replace(/我付|我付款|我先付|付錢|付款|先付|付/g, "")
-    .replace(/對方全額負擔|對方負擔全部|對方付全額|兩人平分|平分|金額\\s*(?:待補|未定)|待補|金額未定|還沒確認金額/g, "")
+    .replace(/對方全額負擔|對方負擔全部|對方付全額|兩人平分|平分|金額\s*(?:待補|未定)|待補|金額未定|還沒確認金額/g, "")
     .replace(/(?:NT\$?\s*)?[0-9][0-9,]*(?:\.\d+)?\s*(?:元|塊)?/g, "")
     .replace(/[，,。\s]/g, " ")
     .trim();
