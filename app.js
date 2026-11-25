@@ -47,12 +47,14 @@ function startSharedRoom() {
     $("syncStatus").textContent = snapshot.val() ? "● 即時同步中" : "連線中…";
   });
 }
-window.selectIdentity = (name) => {
+window.addEventListener("ledger-identity-selected", (event) => {
+  const name = event.detail?.name;
   if (!["佩筠","Benson"].includes(name)) return;
   currentMember = name;
   localStorage.setItem("ledger_operator", name);
-  startSharedRoom();
-};
+  if (currentUser) startSharedRoom();
+  else $("identityError").textContent = "已選擇 " + name + "，正在建立安全連線…";
+});
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   if (!user) {
@@ -64,9 +66,13 @@ onAuthStateChanged(auth, async (user) => {
     }
     return;
   }
-  $("identityScreen").hidden = false;
-  $("chatApp").hidden = true;
-  $("identityError").textContent = "";
+  if (currentMember) {
+    startSharedRoom();
+  } else {
+    $("identityScreen").hidden = false;
+    $("chatApp").hidden = true;
+    $("identityError").textContent = "";
+  }
 });
 
 function audit(action, message, before = null, after = null) {
