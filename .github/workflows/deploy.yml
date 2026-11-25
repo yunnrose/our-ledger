@@ -54,10 +54,10 @@ jobs:
           fi
           printf '%s\n' "$FIREBASE_CONFIG_JS" > js/firebase-config.js
           # Normalize the Firebase Console snippet to the named export used by app.js.
-          if grep -qE '^export const firebaseConfig[[:space:]]*=' js/firebase-config.js; then
+          if grep -qE '^[[:space:]]*export[[:space:]]+const[[:space:]]+firebaseConfig[[:space:]]*=' js/firebase-config.js; then
             :
-          elif grep -qE '^const firebaseConfig[[:space:]]*=' js/firebase-config.js; then
-            sed -i 's/^const firebaseConfig[[:space:]]*=/export const firebaseConfig =/' js/firebase-config.js
+          elif grep -qE '^[[:space:]]*const[[:space:]]+firebaseConfig[[:space:]]*=' js/firebase-config.js; then
+            sed -i -E 's/^[[:space:]]*const[[:space:]]+firebaseConfig[[:space:]]*=/export const firebaseConfig =/' js/firebase-config.js
           else
             echo "Firebase config must declare firebaseConfig as a const export or plain const."
             exit 1
