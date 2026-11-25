@@ -179,13 +179,33 @@ window.togglePendingFilter = () => {
 };
 window.sendQuickTx = async (event) => {
   event.preventDefault(); if(!currentUser || !currentMember) return;
-  const raw=$("quickItem").value.trim(), amt=quickPending?0:Number($("quickAmount").value);
-  if(!raw) return alert("請輸入項目名稱");
-  if(!quickPending && (!Number.isSafeInteger(amt)||amt<=0)) return alert("請輸入正整數金額，或選擇待補");
-  const now=new Date(), date=taiwanDateString(now);
-  const tx={type:"expense",item:raw,amount:amt,isPending:quickPending,payer:quickPayer,splitType:quickSplit,date,category:$("quickCategory").value,shortTime:new Intl.DateTimeFormat("zh-TW",{timeZone:"Asia/Taipei",hour:"2-digit",minute:"2-digit",hour12:false}).format(now),createdAt:Date.now(),createdByUid:currentUser.uid,createdBy:currentMember};
-  try { await push(txRef,tx); await audit("create","新增："+raw+(quickPending?"（待補）":" "+money(amt)),null,tx); $("quickItem").value="";$("quickAmount").value="";if(quickPending)window.toggleQuickPending(); }
-  catch(e){alert("新增失敗，請確認登入狀態與資料庫權限。");}
+  const raw=$("quickItem").value.trim();
+  if(!raw) return alert("請輸入記帳內容");
+  const now=new Date();
+  const parsed=parseNaturalLanguage(raw,currentMember,now);
+  const hasNaturalAmount=/\d/.test(raw);
+  const hasNaturalPending=/待補|金額未定|還沒確認金額/.test(raw);
+  let tx;
+  if(parsed.ok && (hasNaturalAmount || hasNaturalPending)) {
+    tx={...parsed.transaction,category:$("quickCategory").value,
+      shortTime:new Intl.DateTimeFormat("zh-TW",{timeZone:"Asia/Taipei",hour:"2-digit",minute:"2-digit",hour12:false}).format(now),
+      createdAt:Date.now(),createdByUid:currentUser.uid,createdBy:currentMember};
+  } else {
+    const amt=quickPending?0:Number($("quickAmount").value);
+    if(!quickPending && (!Number.isSafeInteger(amt)||amt<=0)) {
+      return alert(parsed.error || "請輸入正整數金額，或使用自然語句，例如：晚餐 850 Benson 付");
+    }
+    tx={type:"expense",item:raw,amount:amt,isPending:quickPending,payer:quickPayer,
+      splitType:quickSplit,date:taiwanDateString(now),category:$("quickCategory").value,
+      shortTime:new Intl.DateTimeFormat("zh-TW",{timeZone:"Asia/Taipei",hour:"2-digit",minute:"2-digit",hour12:false}).format(now),
+      createdAt:Date.now(),createdByUid:currentUser.uid,createdBy:currentMember};
+  }
+  try {
+    await push(txRef,tx);
+    await audit("create","新增："+tx.item+(tx.isPending?"（待補）":" "+money(tx.amount))+"（"+tx.payer+" 付款）",null,tx);
+    $("quickItem").value="";$("quickAmount").value="";
+    if(quickPending && $("quickPendingChip").classList.contains("active")) window.toggleQuickPending();
+  } catch(e) { alert("新增失敗，請確認登入狀態與資料庫權限。"); }
 };
 window.openEditModal = (id) => {
   const tx=transactions[id]; if(!tx || tx.isDeleted) return;
