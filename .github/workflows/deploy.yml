@@ -52,7 +52,7 @@ jobs:
             echo "Missing repository secret FIREBASE_CONFIG_JS."
             exit 1
           fi
-          printf '%s\\n' "$FIREBASE_CONFIG_JS" > js/firebase-config.js
+          printf '%s\n' "$FIREBASE_CONFIG_JS" > js/firebase-config.js
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
