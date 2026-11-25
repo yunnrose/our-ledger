@@ -98,52 +98,57 @@ export function describeSettlement(netBalance) {
 export function parseNaturalLanguage(input, operator, now = new Date()) {
   const raw = String(input || "").trim();
   if (!raw) return { ok: false, error: "請輸入記帳內容" };
-  if (!MEMBERS.includes(operator)) return { ok: false, error: "請先確認目前登入身分" };
+  if (!MEMBERS.includes(operator)) return { ok: false, error: "請先選擇操作身分" };
 
   let date = taiwanDateString(now);
   let text = raw;
-  if (/前天/.test(text)) { date = addDays(date, -2); text = text.replace("前天", ""); }
-  else if (/昨天|昨日/.test(text)) { date = addDays(date, -1); text = text.replace(/昨天|昨日/, ""); }
-  else if (/今天|今日/.test(text)) { text = text.replace(/今天|今日/, ""); }
-
-  const explicitDate = text.match(/(20\d{2})[年/-](\d{1,2})[月/-](\d{1,2})日?/);
-  if (explicitDate) {
-    const y = Number(explicitDate[1]), m = Number(explicitDate[2]), d = Number(explicitDate[3]);
-    const candidate = new Date(Date.UTC(y, m - 1, d, 12));
-    if (candidate.getUTCFullYear() !== y || candidate.getUTCMonth() !== m - 1 || candidate.getUTCDate() !== d)
-      return { ok: false, error: "日期格式不正確" };
+  const relative = text.match(/前天|昨天|昨日|今天|今日/);
+  if (relative) {
+    if (/前天/.test(relative[0])) date = addDays(date, -2);
+    else if (/昨天|昨日/.test(relative[0])) date = addDays(date, -1);
+    text = text.replace(relative[0], "");
+  }
+  const fullDate = text.match(/(20\d{2})[年/-](\d{1,2})[月/-](\d{1,2})日?/);
+  const shortDate = !fullDate && text.match(/(^|\s)(\d{1,2})[月/-](\d{1,2})日?(?=\s|$)/);
+  const dateMatch = fullDate || shortDate;
+  if (dateMatch) {
+    const y = fullDate ? Number(fullDate[1]) : Number(taiwanDateString(now).slice(0,4));
+    const m = Number(fullDate ? fullDate[2] : shortDate[2]);
+    const d = Number(fullDate ? fullDate[3] : shortDate[3]);
+    const candidate = new Date(Date.UTC(y,m-1,d,12));
+    if(candidate.getUTCFullYear()!==y||candidate.getUTCMonth()!==m-1||candidate.getUTCDate()!==d)
+      return {ok:false,error:"日期格式不正確"};
     date = `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-    text = text.replace(explicitDate[0], "");
+    text = text.replace(dateMatch[0]," ");
+  }
+
+  // Repayment intent is parsed before expense intent to avoid treating a transfer as spending.
+  const repayment = text.match(/(Benson|佩筠)\s*還給\s*(Benson|佩筠)\s*([0-9][0-9,]*(?:\.\d+)?)\s*(?:元|塊)?/i);
+  if (repayment) {
+    const payer=repayment[1], receiver=repayment[2], amount=Math.round(Number(repayment[3].replace(/,/g,"")));
+    if(payer===receiver||!Number.isSafeInteger(amount)||amount<=0) return {ok:false,error:"請確認還款人、收款人及金額"};
+    return {ok:true,transaction:{type:"settlement",item:"還款",amount,payer,receiver,date,isPending:false,createdAt:Date.now(),sourceText:raw}};
   }
 
   const pending = /待補|金額未定|還沒確認金額/.test(text);
-  const splitType = /對方全額負擔|對方負擔全部|對方付全額/.test(text) ? "advance" : "split";
+  const splitType = /全算對方的|對方全額負擔|對方負擔全部|對方付全額/.test(text) ? "advance" : "split";
   const payerMatch = text.match(/(Benson|佩筠)\s*(?:付|付款|先付)/i);
-  const payer = /我付|我付款|我先付/.test(text) ? operator : payerMatch ? payerMatch[1] : null;
-
+  // Missing payer defaults to the currently selected operator identity.
+  const payer = /我付|我付款|我先付/.test(text) ? operator : payerMatch ? payerMatch[1] : operator;
   const amountMatch = text.match(/(?:NT\$?\s*)?([0-9][0-9,]*(?:\.\d+)?)\s*(?:元|塊)?/);
-  const amount = pending ? 0 : amountMatch ? Math.round(Number(amountMatch[1].replace(/,/g, ""))) : null;
-  if (!pending && (amount === null || !Number.isSafeInteger(amount) || amount <= 0))
-    return { ok: false, error: "尚未辨識到有效金額，請補上金額或標記「待補」" };
-  if (!payer) return { ok: false, error: "尚未辨識付款人，請加上「Benson 付」、「佩筠 付」或「我付」" };
+  const amount = pending ? 0 : amountMatch ? Math.round(Number(amountMatch[1].replace(/,/g,""))) : null;
+  if(!pending && (amount===null||!Number.isSafeInteger(amount)||amount<=0))
+    return {ok:false,error:"尚未辨識到有效金額，請補上金額或標記「待補」"};
 
-  let item = text
-    .replace(/Benson|佩筠/g, "")
-    .replace(/我付|我付款|我先付|付錢|付款|先付|付/g, "")
-    .replace(/對方全額負擔|對方負擔全部|對方付全額|兩人平分|平分|金額\s*(?:待補|未定)|待補|金額未定|還沒確認金額/g, "")
-    .replace(/(?:NT\$?\s*)?[0-9][0-9,]*(?:\.\d+)?\s*(?:元|塊)?/g, "")
-    .replace(/[，,。\s]/g, " ")
-    .trim();
-  item = item.replace(/\s+/g, " ").replace(/^(的)+|的+$/g, "").trim();
-  if (!item) return { ok: false, error: "尚未辨識到消費項目" };
-
-  return {
-    ok: true,
-    transaction: {
-      type: "expense", item, amount, isPending: pending, payer, splitType, date,
-      createdAt: Date.now(), sourceText: raw
-    }
-  };
+  let item=text
+    .replace(/Benson|佩筠/g,"")
+    .replace(/我付|我付款|我先付|付錢|付款|先付|付/g,"")
+    .replace(/全算對方的|對方全額負擔|對方負擔全部|對方付全額|兩人平分|平分|金額\s*(?:待補|未定)|待補|金額未定|還沒確認金額/g,"")
+    .replace(/(?:NT\$?\s*)?[0-9][0-9,]*(?:\.\d+)?\s*(?:元|塊)?/g,"")
+    .replace(/[，,。\s]/g," ").replace(/\s+/g," ").trim()
+    .replace(/^(的)+|的+$/g,"").trim();
+  if(!item) return {ok:false,error:"尚未辨識到消費項目"};
+  return {ok:true,transaction:{type:"expense",item,amount,isPending:pending,payer,splitType,date,createdAt:Date.now(),sourceText:raw}};
 }
 
 export function validateSettlement({ payer, receiver, amount }, netBalance) {
