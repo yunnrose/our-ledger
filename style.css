@@ -441,3 +441,12 @@ body {
 .auth-card .auth-error {color:#dc2626;min-height:1.2em;margin:4px 0 0;font-size:.84rem}
 .account-tools {display:flex;align-items:center;gap:10px;font-size:.8rem;color:var(--text-muted)}
 .account-tools button {border:1px solid #e2e8f0;background:#fff;border-radius:999px;padding:6px 12px;cursor:pointer}
+
+/* v1.2: single natural-language composer and uncategorized ledger */
+.ledger-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:10px 14px;background:#fff;border-bottom:1px solid #eee7e2}
+.ledger-stats>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ledger-stats span{font-size:.7rem;color:var(--text-muted)}
+.ledger-stats strong{font-size:.88rem;color:var(--text-main);white-space:nowrap}
+.composer-hint{font-size:.72rem;color:var(--text-muted);padding:6px 4px 0;line-height:1.45}
+.composer-input-row .item-input{flex:1;min-width:0;width:100%}
+@media(max-width:420px){.ledger-stats{gap:5px;padding:9px 10px}.ledger-stats strong{font-size:.78rem}.ledger-stats span{font-size:.66rem}}
