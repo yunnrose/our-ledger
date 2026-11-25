@@ -450,3 +450,35 @@ body {
 .composer-hint{font-size:.72rem;color:var(--text-muted);padding:6px 4px 0;line-height:1.45}
 .composer-input-row .item-input{flex:1;min-width:0;width:100%}
 @media(max-width:420px){.ledger-stats{gap:5px;padding:9px 10px}.ledger-stats strong{font-size:.78rem}.ledger-stats span{font-size:.66rem}}
+
+/* v1.3 romantic couple ledger — cream, sky blue and soft lavender */
+:root{--cream:#FFFCF8;--capoo:#91C5E5;--kuromi:#B69ADB;--mint:#E8F4ED}
+body{background:var(--cream)}
+.chat-app{background:var(--cream)}
+.balance-toggle{width:100%;border:0;text-align:left;cursor:pointer}
+.balance-banner{background:linear-gradient(110deg,#eaf6fc,#f4edfb);border:1px solid #e3edf5;border-radius:20px;padding:12px 14px}
+.balance-info strong{color:#3c779c}
+.balance-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:12px;background:#fff;border-radius:16px;margin:8px 0;box-shadow:0 2px 10px #00000008}
+.balance-details div{display:flex;flex-direction:column;gap:3px}.balance-details span{font-size:.72rem;color:#8a8790}.balance-details strong{font-size:.9rem;color:#4f7186}
+.tools-bar{display:flex;gap:7px;padding:8px 12px;background:var(--cream);align-items:center}
+.tools-bar button{border:1px solid #e6e1dc;background:white;border-radius:999px;padding:8px 11px;color:#6e7180}
+.tools-bar input{min-width:0;flex:1;border:1px solid #eee5de;border-radius:999px;padding:9px 12px;background:#fff;font:inherit;font-size:.8rem}
+.calendar-panel{background:#fff;margin:0 12px 8px;padding:12px;border-radius:16px}
+.calendar-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.calendar-head button,.calendar-day{border:0;background:#f7f5f2;border-radius:9px;padding:7px 10px}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;text-align:center}
+.calendar-weekday{font-size:.72rem;color:#9b96a0;padding:5px}
+.calendar-day{position:relative;padding:8px 2px;background:#fff;color:#5e6470}
+.calendar-day.has-record:after{content:"";position:absolute;bottom:2px;left:calc(50% - 3px);width:6px;height:6px;border-radius:50%;background:var(--capoo)}
+.calendar-day.selected{background:#eaf6fc;color:#31749b;font-weight:700}
+.calculator-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.calculator-grid button{border:0;border-radius:12px;background:#f3f0ed;padding:15px;font-size:1.1rem}
+.calculator-grid button:active{background:#e6f2f8}
+.chat-composer{background:var(--cream)}
+.chat-input{background:#fff;border:1px solid #eee7e1}
+.msg-row.left .bubble{background:#fff;border:1px solid #dcecf5}
+.msg-row.right .bubble{background:#fff;border:1px solid #eadff5}
+.msg-row.left .msg-avatar{background:#e5f4fc;color:#397ca2}
+.msg-row.right .msg-avatar{background:#f1e9fa;color:#8662ae}
+.system-pill{background:var(--mint);border-color:#d3e8da;color:#527a62}
+@media(max-width:420px){.tools-bar{gap:5px;padding:7px}.tools-bar button{padding:8px;font-size:.75rem}.tools-bar input{font-size:.75rem}}
