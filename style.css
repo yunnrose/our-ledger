@@ -720,3 +720,11 @@ button.calendar-summary-item.pending-summary:disabled{opacity:.72}
 .calendar-day-panel .calendar-day-summary{margin:0}
 .calendar-day-panel .calendar-day-records{max-height:220px;overflow:auto}
 .calendar-day-panel .calendar-day-actions{margin-top:0}
+
+
+/* Pending list is launched from the top-level balance banner */
+.pending-list-modal{max-width:430px}
+#pendingList{display:flex;flex-direction:column;gap:2px;max-height:55dvh;overflow-y:auto}
+.calendar-day-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+.calendar-summary-item{border:0;text-align:left;cursor:default}
+.calendar-day-actions{grid-template-columns:1fr}
