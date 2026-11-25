@@ -6,8 +6,8 @@
     --border-color: #e2e8f0;
     --benson-color: #2563eb;
     --benson-bg: #eff6ff;
-    --peijun-color: #db2777;
-    --peijun-bg: #fdf2f8;
+    --peiyun-color: #db2777;
+    --peiyun-bg: #fdf2f8;
     --warning-color: #d97706;
     --warning-bg: #fef3c7;
     --success-color: #059669;
@@ -74,7 +74,7 @@ body {
 
 .summary-label { font-size: 0.95rem; color: #cbd5e1; margin-bottom: 6px; }
 .summary-label strong.benson { color: #60a5fa; }
-.summary-label strong.peijun { color: #f472b6; }
+.summary-label strong.peiyun { color: #f472b6; }
 
 .summary-amount {
     font-size: 2.2rem;
@@ -132,7 +132,7 @@ body {
     color: var(--text-muted);
 }
 .user-pill.active[data-user="Benson"] { background: var(--benson-bg); color: var(--benson-color); border-color: var(--benson-color); }
-.user-pill.active[data-user="佩筠"] { background: var(--peijun-bg); color: var(--peijun-color); border-color: var(--peijun-color); }
+.user-pill.active[data-user="佩筠"] { background: var(--peiyun-bg); color: var(--peiyun-color); border-color: var(--peiyun-color); }
 
 /* 篩選分頁 */
 .tabs { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; }
@@ -173,7 +173,7 @@ body {
 .tx-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
 .tx-left { display: flex; gap: 12px; align-items: center; }
 
-.avatar {
+..avatar {
     width: 40px;
     height: 40px;
     border-radius: 12px;
@@ -183,9 +183,16 @@ body {
     font-weight: 700;
     font-size: 0.9rem;
     flex-shrink: 0;
+    overflow: hidden;
+}
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 .avatar.benson { background: var(--benson-bg); color: var(--benson-color); }
-.avatar.peijun { background: var(--peijun-bg); color: var(--peijun-color); }
+.avatar.peiyun { background: var(--peiyun-bg); color: var(--peiyun-color); }
 
 .tx-title { font-weight: 700; font-size: 1rem; color: var(--text-main); }
 .tx-meta { font-size: 0.78rem; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 2px; }
