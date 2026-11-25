@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getDatabase, ref, get, push, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getDatabase, ref, push, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { firebaseConfig } from "./js/firebase-config.js";
 import { calculateLedger, parseNaturalLanguage, taiwanDateString, validateSettlement, describeSettlement } from "./js/ledger-core.js";
 
@@ -25,62 +25,52 @@ const $ = (id) => document.getElementById(id);
 const money = (n) => "NT$ " + Number(n || 0).toLocaleString("zh-TW");
 const memberName = (name) => name === "佩筠" ? "佩筠" : "Benson";
 
-function showAuthError(error) {
-  const messages = {
-    "auth/invalid-credential": "帳號或密碼錯誤。",
-    "auth/invalid-email": "Email 格式不正確。",
-    "auth/too-many-requests": "登入嘗試次數過多，請稍後再試。",
-    "auth/network-request-failed": "網路連線失敗，請確認網路後重試。"
-  };
-  $("authError").textContent = messages[error.code] || "登入失敗，請確認帳號設定或聯絡管理者。";
-}
-$("loginForm").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  $("authError").textContent = "";
-  $("loginSubmit").disabled = true;
-  try {
-    await signInWithEmailAndPassword(auth, $("loginEmail").value.trim(), $("loginPassword").value);
-  } catch (error) { showAuthError(error); }
-  finally { $("loginSubmit").disabled = false; }
-});
-$("logoutBtn").addEventListener("click", () => signOut(auth));
-
-onAuthStateChanged(auth, async (user) => {
-  currentUser = user;
+function startSharedRoom() {
+  if (!currentUser || !currentMember) return;
+  $("identityScreen").hidden = true;
+  $("chatApp").hidden = false;
+  $("currentIdentity").textContent = "操作身分：" + currentMember;
+  quickPayer = currentMember;
+  updatePayerChips();
   if (stopTransactions) stopTransactions();
   if (stopLogs) stopLogs();
-  stopTransactions = stopLogs = null;
+  stopTransactions = onValue(txRef, (snapshot) => {
+    transactions = snapshot.val() || {};
+    renderSummary();
+    renderChat();
+  }, () => $("syncStatus").textContent = "資料讀取失敗");
+  stopLogs = onValue(logsRef, (snapshot) => {
+    logs = Object.values(snapshot.val() || {}).sort((a,b) => (b.timestamp||0)-(a.timestamp||0));
+  });
+  onValue(ref(db, ".info/connected"), (snapshot) => {
+    $("syncStatus").textContent = snapshot.val() ? "● 即時同步中" : "連線中…";
+  });
+}
+window.selectIdentity = (name) => {
+  if (!["佩筠","Benson"].includes(name)) return;
+  currentMember = name;
+  localStorage.setItem("ledger_operator", name);
+  startSharedRoom();
+};
+$("switchIdentityBtn").addEventListener("click", () => {
   currentMember = null;
-  $("authScreen").hidden = !!user;
-  $("chatApp").hidden = !user;
-  if (!user) return;
-  try {
-    const snap = await get(ref(db, "members/" + user.uid));
-    const profile = snap.val();
-    if (!profile || profile.active !== true || !["佩筠", "Benson"].includes(profile.name)) {
-      await signOut(auth);
-      $("authError").textContent = "此帳號尚未被授權加入聊天室，請聯絡管理者。";
-      return;
+  $("chatApp").hidden = true;
+  $("identityScreen").hidden = false;
+});
+onAuthStateChanged(auth, async (user) => {
+  currentUser = user;
+  if (!user) {
+    try { await signInAnonymously(auth); }
+    catch (error) {
+      $("identityError").textContent = "無法連線至共享聊天室，請稍後再試。";
     }
-    currentMember = profile.name;
-    $("currentIdentity").textContent = "已登入：" + currentMember;
-    $("syncStatus").textContent = "● 身分已驗證，連線中";
-    quickPayer = currentMember;
-    updatePayerChips();
-    stopTransactions = onValue(txRef, (snapshot) => {
-      transactions = snapshot.val() || {};
-      renderSummary();
-      renderChat();
-    }, () => $("syncStatus").textContent = "資料讀取失敗");
-    stopLogs = onValue(logsRef, (snapshot) => {
-      logs = Object.values(snapshot.val() || {}).sort((a,b) => (b.timestamp||0)-(a.timestamp||0));
-    });
-    onValue(ref(db, ".info/connected"), (snapshot) => {
-      $("syncStatus").textContent = snapshot.val() ? "● 即時同步中" : "連線中…";
-    });
-  } catch (error) {
-    await signOut(auth);
-    $("authError").textContent = "無法讀取帳號授權資料，請確認 Firebase Rules 與 members 設定。";
+    return;
+  }
+  const saved = localStorage.getItem("ledger_operator");
+  if (["佩筠","Benson"].includes(saved)) window.selectIdentity(saved);
+  else {
+    $("identityScreen").hidden = false;
+    $("chatApp").hidden = true;
   }
 });
 
