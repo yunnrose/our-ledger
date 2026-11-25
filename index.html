@@ -167,5 +167,9 @@
 
 <div id="calculatorModal" class="modal-backdrop"><div class="modal"><div class="modal-header"><h3 class="modal-title">🧮 小計算機</h3><button class="close-btn" type="button" onclick="closeModals()">×</button></div><input id="calcDisplay" class="form-input" value="0" readonly><div class="calculator-grid"><button type="button" onclick="calcPress('7')">7</button><button type="button" onclick="calcPress('8')">8</button><button type="button" onclick="calcPress('9')">9</button><button type="button" onclick="calcPress('÷')">÷</button><button type="button" onclick="calcPress('4')">4</button><button type="button" onclick="calcPress('5')">5</button><button type="button" onclick="calcPress('6')">6</button><button type="button" onclick="calcPress('×')">×</button><button type="button" onclick="calcPress('1')">1</button><button type="button" onclick="calcPress('2')">2</button><button type="button" onclick="calcPress('3')">3</button><button type="button" onclick="calcPress('−')">−</button><button type="button" onclick="calcPress('C')">C</button><button type="button" onclick="calcPress('0')">0</button><button type="button" onclick="calcPress('.')">.</button><button type="button" onclick="calcPress('+')">+</button><button type="button" onclick="calcPress('=')">=</button></div></div></div>
 
+<script>
+window.addEventListener("error", function(){ var el=document.getElementById("identityError"); if(el) el.textContent="程式載入失敗，請重新整理；若持續發生，請將此畫面回報給維護者。"; });
+window.addEventListener("unhandledrejection", function(){ var el=document.getElementById("identityError"); if(el) el.textContent="Firebase 連線初始化失敗，請確認網路後重新整理。"; });
+</script>
 </body>
 </html>
