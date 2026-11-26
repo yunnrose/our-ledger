@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>佩筠 × Benson 的專屬小帳本 ♡</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- 加上 ?v=2 強制瀏覽器讀取最新 CSS -->
+    <link rel="stylesheet" href="style.css?v=10">
+</head>
+<body>
+
+<section id="identityScreen" class="auth-screen">
+  <div class="auth-card identity-card">
+    <div class="auth-mark">💕</div>
+    <h1>佩筠 × Benson</h1>
+    <p>歡迎回到你們的共享記帳聊天室</p>
+    <p class="identity-hint">請選擇這次要使用的操作身分</p>
+    <button type="button" class="identity-choice benson-choice" onclick="selectIdentity('Benson')">💙 我是 Benson</button>
+    <button type="button" class="identity-choice peijun-choice" onclick="selectIdentity('佩筠')">💜 我是 佩筠</button>
+    <p id="identityError" role="alert" class="auth-error">正在連線至共享帳本…</p>
+    <small>此選擇僅用於標示記帳操作者，並非個人身分驗證。</small>
+  </div>
+</section>
+
+<div class="chat-app" id="chatApp" hidden>
+  <header class="chat-header">
+    <div class="header-top">
+      <div class="room-title">
+        <div>
+          <h1>佩筠 × Benson 的小帳本</h1>
+          <div id="syncStatus" class="sync-text">連線中…</div><span id="currentIdentity" hidden></span>
+        </div>
+      </div>
+      <div class="header-icons">
+        <button type="button" class="header-icon" aria-label="月曆" onclick="toggleCalendar()"><i class="fa-regular fa-calendar-days"></i></button>
+        <button type="button" class="header-icon" aria-label="搜尋" onclick="toggleSearch()"><i class="fa-solid fa-magnifying-glass"></i></button>
+        <button type="button" class="header-icon header-share" aria-label="分享帳本" onclick="shareLedger()"><i class="fa-solid fa-share-nodes"></i></button>
+        <button type="button" class="header-icon" aria-label="設定及切換身分" onclick="openSettings()"><i class="fa-solid fa-gear"></i></button>
+      </div>
+    </div>
+    <div class="balance-banner">
+      <div class="balance-info">
+        <span id="settlementText">計算中...</span>
+        <strong id="settlementAmount">NT$ 0</strong>
+      </div>
+      <div class="banner-actions">
+        <button type="button" class="mini-btn settle-btn" onclick="openSettleModal()"><i class="fa-solid fa-hand-holding-dollar"></i> 記一筆還款</button>
+        <button type="button" class="mini-btn pending-filter" id="pendingFilterBtn" onclick="openPendingModal()"><i class="fa-solid fa-wallet"></i> <span id="pendingCount">0</span> 筆待補</button>
+      </div>
+    </div>
+    <section id="balanceDetails" class="balance-details" hidden>
+      <div><span>本月支出</span><strong id="monthlyExpense">NT$ 0</strong></div>
+      <div><span>累計支出</span><strong id="totalExpense">NT$ 0</strong></div>
+      <div><span>Benson 已付款</span><strong id="bensonPaid">NT$ 0</strong></div>
+      <div><span>佩筠 已付款</span><strong id="peijunPaid">NT$ 0</strong></div>
+      <div><span>佩筠應負擔</span><strong id="peijunShare">NT$ 0</strong></div>
+      <div><span>Benson應負擔</span><strong id="bensonShare">NT$ 0</strong></div>
+    </section>
+    <section id="searchPanel" class="search-panel" hidden>
+      <input id="searchInput" type="search" placeholder="搜尋項目或分類關鍵字" oninput="setSearch(this.value)" aria-label="搜尋紀錄">
+    </section>
+    <section id="calendarPanel" class="calendar-panel" hidden>
+      <div class="calendar-head"><button type="button" onclick="changeCalendarMonth(-1)">‹</button><strong id="calendarTitle"></strong><button type="button" onclick="changeCalendarMonth(1)">›</button><button type="button" onclick="clearDateFilter()">全部</button></div>
+      <div id="calendarGrid" class="calendar-grid"></div>
+      <!-- selected date details render here -->
+      <section id="calendarDayModal" class="calendar-day-panel" hidden>
+        <div class="calendar-day-heading"><h3 id="calendarDayTitle">當日帳務</h3></div>
+        <div id="calendarDaySummary" class="calendar-day-summary"></div>
+        <div class="calendar-day-actions">
+          <button type="button" class="calendar-add-expense" onclick="openCalendarExpenseModal()"><i class="fa-solid fa-plus"></i> 新增支出</button>
+          <button type="button" class="calendar-add-repayment" onclick="openCalendarRepaymentModal()"><i class="fa-solid fa-wallet"></i> 新增還款</button>
+        </div>
+        <div class="calendar-day-records"><h4>當日紀錄</h4><div id="calendarDayRecords"></div></div>
+      </section>
+    </section>
+  </header>
+  <nav class="ledger-tabs" aria-label="帳本檢視">
+    <button type="button" class="ledger-tab active" data-tab="all" onclick="setLedgerTab('all')"><i class="fa-solid fa-list"></i> 全部</button>
+    <button type="button" class="ledger-tab" data-tab="repayment" onclick="setLedgerTab('repayment')"><i class="fa-solid fa-hand-holding-dollar"></i> 還款</button>
+    <button type="button" class="ledger-tab" data-tab="details" onclick="setLedgerTab('details')"><i class="fa-regular fa-rectangle-list"></i> 明細</button>
+  </nav>
+  <main id="chatStream" class="chat-stream">
+    <div class="empty-chat">正在載入你們的帳本…</div>
+  </main>
+  <footer class="chat-composer">
+    <button type="button" class="composer-calc" onclick="openCalculator()" aria-label="計算機"><i class="fa-solid fa-calculator"></i></button>
+    <form class="composer-input-row" onsubmit="sendQuickTx(event)">
+      <input type="text" id="quickItem" class="chat-input item-input" placeholder="例如：晚餐 850 Benson 付" autocomplete="off">
+      <button type="submit" class="send-btn" title="新增記錄" aria-label="新增記錄"><i class="fa-regular fa-paper-plane"></i></button>
+    </form>
+  </footer>
+</div>
+
+<!-- 全部待補金額清單 -->
+<div id="pendingModal" class="modal-backdrop">
+  <div class="modal pending-list-modal">
+    <div class="modal-header">
+      <h3 class="modal-title">📝 待補金額</h3>
+      <button type="button" class="close-btn" onclick="closeModals()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <p class="calendar-pending-hint">點選一筆紀錄，即可補上實際金額。</p>
+    <div id="pendingList"></div>
+  </div>
+</div>
+
+<!-- 修改 / 補金額 彈窗 -->
+<div id="editModal" class="modal-backdrop">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="editModalTitle" class="modal-title">修改這筆對話</h3>
+            <button class="close-btn" onclick="closeModals()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form onsubmit="saveEditedTx(event)">
+            <input type="hidden" id="editTxId">
+            <div class="form-group">
+                <label class="form-label">項目名稱</label>
+                <input type="text" id="editItem" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">金額 (NT$)</label>
+                <input type="number" id="editAmount" class="form-input" step="0.5" min="0">
+                <label class="checkbox-row">
+                    <input type="checkbox" id="editPending" onchange="toggleEditPending()"> 金額待補
+                </label>
+            </div>
+            <div class="form-group">
+                <label class="form-label">誰先付錢？</label>
+                <div class="radio-group" id="editPayerGroup">
+                    <div class="radio-btn" data-val="Benson" onclick="selectRadio('editPayerGroup', 'Benson')">💙 Benson 付</div>
+                    <div class="radio-btn" data-val="佩筠" onclick="selectRadio('editPayerGroup', '佩筠')">💜 佩筠 付</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">分帳方式</label>
+                <div class="radio-group" id="editSplitGroup">
+                    <div class="radio-btn" data-val="split" onclick="selectRadio('editSplitGroup', 'split')">兩人平分</div>
+                    <div class="radio-btn" data-val="advance" onclick="selectRadio('editSplitGroup', 'advance')">對方全額負擔</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">日期</label>
+                <input type="date" id="editDate" class="form-input" required>
+            </div>
+            <button type="submit" class="btn-submit">儲存修改</button>
+        </form>
+    </div>
+</div>
+
+<!-- 還款彈窗 -->
+<div id="settleModal" class="modal-backdrop">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">💸 記錄一筆還款</h3>
+            <button class="close-btn" onclick="closeModals()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form onsubmit="saveSettlement(event)">
+            <input type="hidden" id="settleTxId">
+            <div class="form-group">
+                <label class="form-label">誰還錢給誰？</label>
+                <div class="radio-group" id="settleDirGroup">
+                    <div class="radio-btn selected" data-val="佩筠->Benson" onclick="selectRadio('settleDirGroup', '佩筠->Benson')">佩筠 還給 Benson</div>
+                    <div class="radio-btn" data-val="Benson->佩筠" onclick="selectRadio('settleDirGroup', 'Benson->佩筠')">Benson 還給 佩筠</div>
+                </div>
+            </div>
+            <div class="form-group"><label class="form-label" for="settleDate">還款日期</label><input type="date" id="settleDate" class="form-input" required></div>
+            <div class="form-group">
+                <label class="form-label">還款金額 (NT$)</label>
+                <input type="number" id="settleAmount" class="form-input" step="0.5" min="1" required>
+            </div>
+            <button type="submit" class="btn-submit btn-green">送出還款訊息</button>
+        </form>
+    </div>
+</div>
+
+
+
+<div id="calendarExpenseModal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">🧾 新增支出</h3>
+      <button type="button" class="close-btn" onclick="closeModals()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form onsubmit="saveCalendarExpense(event)">
+      <div class="form-group">
+        <label class="form-label" for="calendarExpenseDate">支出日期</label>
+        <input type="date" id="calendarExpenseDate" class="form-input" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="calendarExpenseInput">記帳內容</label>
+        <input type="text" id="calendarExpenseInput" class="form-input" placeholder="例如：晚餐 850 Benson付；只輸入項目可建立待補" required>
+      </div>
+      <button type="submit" class="btn-submit">確認新增支出</button>
+    </form>
+  </div>
+</div>
+
+<!-- 修改歷史紀錄彈窗 -->
+<div id="logsModal" class="modal-backdrop">
+    <div class="modal" style="max-height: 75vh; display: flex; flex-direction: column;">
+        <div class="modal-header">
+            <h3 class="modal-title">📜 帳本修改歷史</h3>
+            <button class="close-btn" onclick="closeModals()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="logsList" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px;"></div>
+    </div>
+</div>
+
+<script type="module" src="app.js?v=12"></script>
+
+<div id="calculatorModal" class="modal-backdrop"><div class="modal"><div class="modal-header"><h3 class="modal-title">🧮 小計算機</h3><button class="close-btn" type="button" onclick="closeModals()">×</button></div><input id="calcDisplay" class="form-input" value="0" readonly><div class="calculator-grid"><button type="button" onclick="calcPress('7')">7</button><button type="button" onclick="calcPress('8')">8</button><button type="button" onclick="calcPress('9')">9</button><button type="button" onclick="calcPress('÷')">÷</button><button type="button" onclick="calcPress('4')">4</button><button type="button" onclick="calcPress('5')">5</button><button type="button" onclick="calcPress('6')">6</button><button type="button" onclick="calcPress('×')">×</button><button type="button" onclick="calcPress('1')">1</button><button type="button" onclick="calcPress('2')">2</button><button type="button" onclick="calcPress('3')">3</button><button type="button" onclick="calcPress('−')">−</button><button type="button" onclick="calcPress('C')">C</button><button type="button" onclick="calcPress('0')">0</button><button type="button" onclick="calcPress('.')">.</button><button type="button" onclick="calcPress('+')">+</button><button type="button" onclick="calcPress('=')">=</button></div></div></div>
+
+<script>
+/* Keep identity selection responsive even while the Firebase module is initializing. */
+window.selectIdentity = function(name) {
+  if (name !== "佩筠" && name !== "Benson") return;
+  var status = document.getElementById("identityError");
+  if (status) status.textContent = "已選擇 " + name + "，正在連線至共享帳本…";
+  window.dispatchEvent(new CustomEvent("ledger-identity-selected", { detail: { name: name } }));
+};
+window.addEventListener("error", function(event) {
+  var el = document.getElementById("identityError");
+  if (el) el.textContent = "程式錯誤：" + (event.message || "資源載入失敗") + "。請回報此訊息。";
+});
+window.addEventListener("unhandledrejection", function(event) {
+  var el = document.getElementById("identityError");
+  var reason = event.reason && (event.reason.message || String(event.reason));
+  if (el) el.textContent = "連線錯誤：" + (reason || "Firebase 初始化失敗") + "。";
+});
+</script>
+</body>
+</html>
