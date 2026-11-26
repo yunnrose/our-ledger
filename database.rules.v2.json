@@ -1,0 +1,44 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "ourLittleLedger": {
+      "transactions": {
+        ".read": "auth != null && auth.token.app === 'ourLittleLedger' && (auth.token.member === 'peijun' || auth.token.member === 'benson') && root.child('ourLittleLedger/memberUids').child(auth.token.member).val() === auth.uid",
+        ".write": "auth != null && auth.token.app === 'ourLittleLedger' && (auth.token.member === 'peijun' || auth.token.member === 'benson') && root.child('ourLittleLedger/memberUids').child(auth.token.member).val() === auth.uid"
+      },
+      "settlements": {
+        ".read": "auth != null && auth.token.app === 'ourLittleLedger' && (auth.token.member === 'peijun' || auth.token.member === 'benson') && root.child('ourLittleLedger/memberUids').child(auth.token.member).val() === auth.uid",
+        ".write": "auth != null && auth.token.app === 'ourLittleLedger' && (auth.token.member === 'peijun' || auth.token.member === 'benson') && root.child('ourLittleLedger/memberUids').child(auth.token.member).val() === auth.uid"
+      },
+      "auditLogs": {
+        ".read": "auth != null && auth.token.app === 'ourLittleLedger' && (auth.token.member === 'peijun' || auth.token.member === 'benson') && root.child('ourLittleLedger/memberUids').child(auth.token.member).val() === auth.uid",
+        ".write": "auth != null && auth.token.app === 'ourLittleLedger' && (auth.token.member === 'peijun' || auth.token.member === 'benson') && root.child('ourLittleLedger/memberUids').child(auth.token.member).val() === auth.uid"
+      },
+      "categories": {
+        ".read": "auth != null && auth.token.app === 'ourLittleLedger' && (auth.token.member === 'peijun' || auth.token.member === 'benson') && root.child('ourLittleLedger/memberUids').child(auth.token.member).val() === auth.uid",
+        ".write": "auth != null && auth.token.app === 'ourLittleLedger' && (auth.token.member === 'peijun' || auth.token.member === 'benson') && root.child('ourLittleLedger/memberUids').child(auth.token.member).val() === auth.uid"
+      },
+      "settings": {
+        ".read": "auth != null && auth.token.app === 'ourLittleLedger' && (auth.token.member === 'peijun' || auth.token.member === 'benson') && root.child('ourLittleLedger/memberUids').child(auth.token.member).val() === auth.uid",
+        ".write": "auth != null && auth.token.app === 'ourLittleLedger' && (auth.token.member === 'peijun' || auth.token.member === 'benson') && root.child('ourLittleLedger/memberUids').child(auth.token.member).val() === auth.uid"
+      },
+      "preferences": {
+        ".read": "auth != null && auth.token.app === 'ourLittleLedger' && (auth.token.member === 'peijun' || auth.token.member === 'benson') && root.child('ourLittleLedger/memberUids').child(auth.token.member).val() === auth.uid",
+        ".write": "auth != null && auth.token.app === 'ourLittleLedger' && (auth.token.member === 'peijun' || auth.token.member === 'benson') && root.child('ourLittleLedger/memberUids').child(auth.token.member).val() === auth.uid"
+      },
+      "members": {
+        ".read": "auth != null && auth.token.app === 'ourLittleLedger' && (auth.token.member === 'peijun' || auth.token.member === 'benson') && root.child('ourLittleLedger/memberUids').child(auth.token.member).val() === auth.uid",
+        ".write": false
+      },
+      "memberUids": {
+        ".read": false,
+        ".write": false
+      },
+      "invitations": {
+        ".read": false,
+        ".write": false
+      }
+    }
+  }
+}
