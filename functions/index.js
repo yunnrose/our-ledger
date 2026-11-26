@@ -29,13 +29,12 @@ exports.redeemInvitation = onCall({ region: REGION, enforceAppCheck: true }, asy
 
   const hash = digest(code);
   const inviteRef = getDatabase().ref(`${ROOT}/invitations/${hash}`);
-  let redeemed;
   const result = await inviteRef.transaction((invite) => {
     if (!invite || invite.usedAt || !invite.member || !MEMBERS[invite.member]) return;
     if (!Number.isFinite(invite.expiresAt) || invite.expiresAt <= Date.now()) return;
-    redeemed = { ...invite, usedAt: Date.now() };
-    return redeemed;
+    return { ...invite, usedAt: Date.now() };
   }, undefined, false);
+  const redeemed = result.snapshot.val();
 
   if (!result.committed || !redeemed) {
     throw new HttpsError("permission-denied", "邀請碼無效、已使用或已過期。");
